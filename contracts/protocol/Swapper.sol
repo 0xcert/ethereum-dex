@@ -1,7 +1,6 @@
 pragma solidity ^0.4.23;
 
 
-import "../math/SafeMath.sol";
 import "../tokens/ERC20.sol";
 import "../tokens/ERC721.sol";
 import "./TokenTransferProxy.sol";

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 /**
  * @title A standard interface for tokens.
@@ -9,7 +9,7 @@ interface ERC20 {
    * @dev Returns the name of the token.
    */
   function name()
-    public
+    external
     constant
     returns (string _name);
 
@@ -17,7 +17,7 @@ interface ERC20 {
    * @dev Returns the symbol of the token.
    */
   function symbol()
-    public
+    external
     constant
     returns (string _symbol);
 
@@ -25,7 +25,7 @@ interface ERC20 {
    * @dev Returns the number of decimals the token uses.
    */
   function decimals()
-    public
+    external
     constant
     returns (uint8 _decimals);
 
@@ -33,7 +33,7 @@ interface ERC20 {
    * @dev Returns the total token supply.
    */
   function totalSupply()
-    public
+    external
     constant
     returns (uint256 _totalSupply);
 
@@ -42,7 +42,7 @@ interface ERC20 {
    * @param _owner The address from which the balance will be retrieved.
    */
   function balanceOf(address _owner)
-    public
+    external
     constant
     returns (uint256 _balance);
 
@@ -54,7 +54,7 @@ interface ERC20 {
    * @param _value The amount of token to be transferred.
    */
   function transfer(address _to, uint256 _value)
-    public
+    external
     returns (bool _success);
 
   /**
@@ -65,7 +65,7 @@ interface ERC20 {
    * @param _value The amount of token to be transferred
    */
   function transferFrom(address _from, address _to, uint256 _value)
-    public
+    external
     returns (bool _success);
 
   /**
@@ -76,7 +76,7 @@ interface ERC20 {
    * @param _value The amount of tokens to be approved for transfer.
    */
   function approve(address _spender, uint256 _value)
-    public
+    external
     returns (bool _success);
 
   /**
@@ -85,7 +85,7 @@ interface ERC20 {
    * @param _spender The address of the account able to transfer the tokens.
    */
   function allowance(address _owner, address _spender)
-    public
+    external
     constant
     returns (uint256 _remaining);
 

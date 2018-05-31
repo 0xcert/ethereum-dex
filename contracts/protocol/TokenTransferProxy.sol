@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "../tokens/ERC20.sol";
 import "../../node_modules/@0xcert/ethereum-erc721/contracts/ownership/Ownable.sol";

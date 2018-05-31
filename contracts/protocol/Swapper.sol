@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 
 import "../../node_modules/@0xcert/ethereum-erc721/contracts/math/SafeMath.sol";
@@ -270,17 +270,19 @@ contract Swapper is SupportsInterface {
     returns (bytes32)
   {
     return keccak256(
-      address(this),
-      _addresses[0],
-      _addresses[1],
-      _getAddressSubArrayTo(_addresses, 2, _uints[2].add(2)),
-      _getUintSubArrayTo(_uints, 4, _uints[2].add(4)),
-      _getAddressSubArrayTo(_addresses, _uints[2].add(2), (_uints[2].add(2)).add(_uints[3])),
-      _getUintSubArrayTo(_uints, _uints[2].add(4), (_uints[2].add(4)).add(_uints[3])),
-      _getAddressSubArrayTo(_addresses, (_uints[2].add(2)).add(_uints[3]), _addresses.length),
-      _getUintSubArrayTo(_uints,(_uints[2].add(4)).add(_uints[3]), _uints.length),
-      _uints[0],
-      _uints[1]
+      abi.encodePacked(
+        address(this),
+        _addresses[0],
+        _addresses[1],
+        _getAddressSubArrayTo(_addresses, 2, _uints[2].add(2)),
+        _getUintSubArrayTo(_uints, 4, _uints[2].add(4)),
+        _getAddressSubArrayTo(_addresses, _uints[2].add(2), (_uints[2].add(2)).add(_uints[3])),
+        _getUintSubArrayTo(_uints, _uints[2].add(4), (_uints[2].add(4)).add(_uints[3])),
+        _getAddressSubArrayTo(_addresses, (_uints[2].add(2)).add(_uints[3]), _addresses.length),
+        _getUintSubArrayTo(_uints,(_uints[2].add(4)).add(_uints[3]), _uints.length),
+        _uints[0],
+        _uints[1]
+      )
     );
   }
 
@@ -303,7 +305,7 @@ contract Swapper is SupportsInterface {
     returns (bool)
   {
     return _signer == ecrecover(
-      keccak256("\x19Ethereum Signed Message:\n32", _claim),
+      keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _claim)),
       _v,
       _r,
       _s

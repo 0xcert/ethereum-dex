@@ -132,17 +132,22 @@ contract Swapper is ERC165implementation {
   }
 
   /*
-   * @dev Performs the NFToken swap..
+   * @dev Performs the NFToken(s) swap.
    *
-   * @param _addresses Array of all addresses that go as following: 0 = Address of NFToken swap
-   * maker, 1 = Address of NFToken taker, then an array of NFToken contract addresses for every
-   * NFToken id of the maker, after an array of NFToken contract addresses for every NFToken id of
-   * the taker, and array of addresses to whom the taker has to pay fees.
-   * @param _uints Array of all uints that go as following: 0 = _seed Timestamp that represents the
-   * salt, 1 = Timestamp of when the transfer claim expires, 2 = numbers of tokens to transfer from
-   * maker to taker, 3 = numbers of tokens to transfer from taker to maker, then an Array of ids
-   * that maker is sending, array of ids that taker is sending, array of fee amounts that have to be
-   * paid.
+   * @param _addresses Array of all addresses that the following index structure:
+   *   0: Address of NFToken swap maker.
+   *   1: Address of NFToken taker.
+   *   2..N: Slice of NFToken contract addresses for each NFToken ID that belongs to the maker.
+   *   N+1..M: Slice of NFToken contract addresses for each NFToken ID that belongs to the taker.
+   *   M+1..Z: Slice of addresses to whom the taker has to pay fees.
+   * @param _uints Array of all uints that has the following index structure:
+   *   0: _seed Timestamp that represents the salt
+   *   1: Timestamp of when the transfer claim expires
+   *   2: Number of tokens to transfer from maker to taker.
+   *   3: Number of tokens to transfer from taker to maker.
+   *   4..N: Slice of IDs that maker is sending.
+   *   N+1..M: Slice of IDs that taker is sending.
+   *   M+1..Z: Slice of fee amounts that has to be paid.
    * @param _v ECDSA signature parameter v.
    * @param _r ECDSA signature parameters r.
    * @param _s ECDSA signature parameters s.

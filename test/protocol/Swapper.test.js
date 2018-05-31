@@ -37,27 +37,27 @@ contract('Swapper', (accounts) => {
     nftoken2 = await NFToken.new('Foo2', 'F2');
     nftoken3 = await NFToken.new('Foo3', 'F3');
 
-    //await token.enableTransfer();
-    //await token.transfer(accounts[1], 200);
-    //await token.transfer(accounts[2], 200);
-    //await token.transfer(accounts[3], 200);
+    await token.enableTransfer();
+    await token.transfer(accounts[1], 200);
+    await token.transfer(accounts[2], 200);
+    await token.transfer(accounts[3], 200);
 
-    //await nftoken.mint(accounts[1], id1, mockProof, 'url');
-    //await nftoken.mint(accounts[2], id2, mockProof, 'url2');
-    //await nftoken.mint(accounts[3], id3, mockProof, 'url3');
-    //await nftoken.mint(accounts[1], id4, mockProof, 'url4');
+    await nftoken.mint(accounts[1], id1, 'url');
+    await nftoken.mint(accounts[2], id2, 'url2');
+    await nftoken.mint(accounts[3], id3, 'url3');
+    await nftoken.mint(accounts[1], id4, 'url4');
 
-    //await nftoken2.mint(accounts[1], nftoken2id1, mockProof, 'url');
-    //await nftoken2.mint(accounts[2], nftoken2id2, mockProof, 'url2');
-    //await nftoken2.mint(accounts[2], nftoken2id3, mockProof, 'url3');
-    //await nftoken2.mint(accounts[3], nftoken2id4, mockProof, 'url4');
+    await nftoken2.mint(accounts[1], nftoken2id1, 'url');
+    await nftoken2.mint(accounts[2], nftoken2id2, 'url2');
+    await nftoken2.mint(accounts[2], nftoken2id3, 'url3');
+    await nftoken2.mint(accounts[3], nftoken2id4, 'url4');
 
-    //await nftoken3.mint(accounts[2], nftoken3id1, mockProof, 'url');
-    //await nftoken3.mint(accounts[2], nftoken3id2, mockProof, 'url2');
+    await nftoken3.mint(accounts[2], nftoken3id1, 'url');
+    await nftoken3.mint(accounts[2], nftoken3id2, 'url2');
 
     swapper = await Swapper.new(token.address, tokenProxy.address, nfTokenProxy.address);
-    //nfTokenProxy.addAuthorizedAddress(swapper.address);
-    //tokenProxy.addAuthorizedAddress(swapper.address);
+    nfTokenProxy.addAuthorizedAddress(swapper.address);
+    tokenProxy.addAuthorizedAddress(swapper.address);
   });
 
   describe('contract addresses', function () {

@@ -21,8 +21,8 @@ contract Swapper is ERC165implementation {
   enum Errors {
     SWAP_ALREADY_PERFORMED, // Transfer has already beed performed.
     SWAP_CANCELLED, // Transfer was cancelled.
-    INSUFFICIENT_BALANCE_OR_ALLOWANCE, // Insufficient balance or allowance for XCT transfer.
-    NFTOKEN_NOT_ALLOWED // Proxy does not have the Permission to transfer all the NFTokens.
+    INSUFFICIENT_BALANCE_OR_ALLOWANCE, // Insufficient balance or allowance for ZXC transfer.
+    NFTOKEN_NOT_ALLOWED // Proxy does not have the permission to transfer all the NFTokens.
   }
 
   /*
@@ -82,17 +82,17 @@ contract Swapper is ERC165implementation {
   }
 
   /*
-   * @dev Sets XCT token address, Token proxy address and NFToken Proxy address.
-   * @param _nfTokenToken Address pointing to XCT Token contract.
+   * @dev Sets ZXC token address, Token Proxy address and NFToken Proxy address.
+   * @param _zxcToken Address pointing to ZXC Token contract.
    * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
    * @param _nfTokenTransferProxy Address pointing to none-fungible token transfer proxy contract.
    */
-  constructor(address _xctToken,
+  constructor(address _zxcToken,
               address _tokenTransferProxy,
               address _nfTokenTransferProxy)
     public
   {
-    TOKEN_CONTRACT = _xctToken;
+    TOKEN_CONTRACT = _zxcToken;
     TOKEN_TRANSFER_PROXY_CONTRACT = _tokenTransferProxy;
     NFTOKEN_TRANSFER_PROXY_CONTRACT = _nfTokenTransferProxy;
     supportedInterfaces[0xe20524dd] = true; // Swapper
@@ -367,7 +367,7 @@ contract Swapper is ERC165implementation {
   }
 
   /*
-   * @dev Transfers XCT tokens via TokenTransferProxy using transferFrom function.
+   * @dev Transfers ZXC tokens via TokenTransferProxy using transferFrom function.
    * @param _token Address of token to transferFrom.
    * @param _from Address transfering token.
    * @param _to Address receiving token.

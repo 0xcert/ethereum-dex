@@ -147,7 +147,7 @@ contract Swapper is ERC165implementation {
    *   3: Number of tokens to transfer from taker to maker.
    *   4..N: Slice of IDs that maker is sending.
    *   N+1..M: Slice of IDs that taker is sending.
-   *   M+1..Z: Slice of fee amounts that has to be paid.
+   *   M+1..Z: Slice of fee amounts that have to be paid.
    * @param _v ECDSA signature parameter v.
    * @param _r ECDSA signature parameters r.
    * @param _s ECDSA signature parameters s.

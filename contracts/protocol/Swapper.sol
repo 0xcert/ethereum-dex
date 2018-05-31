@@ -38,7 +38,7 @@ contract Swapper is ERC165implementation {
   uint16 constant public EXTERNAL_QUERY_GAS_LIMIT = 4999;
 
   /*
-   * @dev Mapping of all canceled transfers.
+   * @dev Mapping of all cancelled transfers.
    */
   mapping(bytes32 => bool) public swapCancelled;
 
@@ -57,7 +57,7 @@ contract Swapper is ERC165implementation {
 
 
   /*
-   * @dev This event emmits when NFToken transfer order is canceled.
+   * @dev This event emmits when NFToken transfer order is cancelled.
    */
   event CancelSwap(address indexed _from,
                    address _to,
@@ -99,7 +99,7 @@ contract Swapper is ERC165implementation {
   }
 
   /*
-   * @dev Get address of token used in exchange.
+   * @dev Get the address of the fee token used in swaps.
    */
   function getTokenAddress()
     external
@@ -110,7 +110,7 @@ contract Swapper is ERC165implementation {
   }
 
   /*
-   * @dev Get address of token transfer proxy used in exchange.
+   * @dev Get the address of the token transfer proxy used in swaps.
    */
   function getTokenTransferProxyAddress()
     external
@@ -121,7 +121,7 @@ contract Swapper is ERC165implementation {
   }
 
   /*
-   * @dev Get address of none-fundgible token transfer proxy used in exchange.
+   * @dev Get the address of the non-fungible token transfer proxy used in swaps.
    */
   function getNFTokenTransferProxyAddress()
     external
@@ -191,7 +191,7 @@ contract Swapper is ERC165implementation {
     ));
 
     require(!swapPerformed[swapData.claim], "Swap already performed.");
-    require(!swapCancelled[swapData.claim], "Swap canceled.");
+    require(!swapCancelled[swapData.claim], "Swap cancelled.");
 
     if (_throwIfNotSwappable)
     {

@@ -5,8 +5,8 @@ pragma solidity 0.4.23;
  */
 
 
-import "../tokens/ERC721.sol";
-import "../ownership/Ownable.sol";
+import "../../node_modules/@0xcert/ethereum-erc721/contracts/tokens/ERC721.sol";
+import "../../node_modules/@0xcert/ethereum-erc721/contracts/ownership/Ownable.sol";
 
 /// @title NFTokenTransferProxy - Transfers none-fundgible tokens on behalf of contracts that have been approved via decentralized governance.
 contract NFTokenTransferProxy is Ownable {

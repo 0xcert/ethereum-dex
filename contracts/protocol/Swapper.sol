@@ -1,16 +1,17 @@
 pragma solidity ^0.4.23;
 
 
+import "../../node_modules/@0xcert/ethereum-erc721/contracts/math/SafeMath.sol";
+import "../../node_modules/@0xcert/ethereum-erc721/contracts/tokens/SupportsInterface.sol";
+import "../../node_modules/@0xcert/ethereum-erc721/contracts/tokens/ERC721.sol";
 import "../tokens/ERC20.sol";
-import "../tokens/ERC721.sol";
 import "./TokenTransferProxy.sol";
 import "./NFTokenTransferProxy.sol";
-import "../tokens/ERC165implementation.sol";
 
 /*
  * @dev based on: https://github.com/0xProject/contracts/blob/master/contracts/Exchange.sol
  */
-contract Swapper is ERC165implementation {
+contract Swapper is SupportsInterface {
 
   using SafeMath for uint256;
 

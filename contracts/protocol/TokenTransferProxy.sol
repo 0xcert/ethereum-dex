@@ -1,7 +1,7 @@
 pragma solidity 0.4.23;
 
 import "../tokens/ERC20.sol";
-import "../ownership/Ownable.sol";
+import "../../node_modules/@0xcert/ethereum-erc721/contracts/ownership/Ownable.sol";
 
 /// @title TokenTransferProxy - Transfers tokens on behalf of contracts that have been approved via decentralized governance.
 /// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>

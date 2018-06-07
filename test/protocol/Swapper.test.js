@@ -3,8 +3,6 @@ const NFTokenTransferProxy = artifacts.require('NFTokenTransferProxy');
 const TokenTransferProxy = artifacts.require('TokenTransferProxy');
 const Zxc = artifacts.require('Zxc');
 const NFToken = artifacts.require('NFTokenMetadataMock');
-// TODO(luka): can't find the file - some simple stupid bug I can't see right now
-//const NFToken = artifacts.require('../../node_modules/@0xcert/ethereum-erc721/contracts/mocks/NFTokenMetadataMock');
 const util = require('ethjs-util');
 const web3Util = require('web3-utils');
 const assertRevert = require('../../node_modules/@0xcert/ethereum-erc721/test/helpers/assertRevert');

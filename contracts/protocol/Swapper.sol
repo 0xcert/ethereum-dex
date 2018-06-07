@@ -1,10 +1,10 @@
 pragma solidity ^0.4.24;
 
 
-import "../../node_modules/@0xcert/ethereum-erc721/contracts/math/SafeMath.sol";
-import "../../node_modules/@0xcert/ethereum-erc721/contracts/tokens/SupportsInterface.sol";
-import "../../node_modules/@0xcert/ethereum-erc721/contracts/tokens/ERC721.sol";
-import "../tokens/ERC20.sol";
+import "@0xcert/ethereum-utils/contracts/math/SafeMath.sol";
+import "@0xcert/ethereum-utils/contracts/utils/SupportsInterface.sol";
+import "@0xcert/ethereum-erc721/contracts/tokens/ERC721.sol";
+import "@0xcert/ethereum-erc20/contracts/tokens/ERC20.sol";
 import "./TokenTransferProxy.sol";
 import "./NFTokenTransferProxy.sol";
 

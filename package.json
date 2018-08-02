@@ -1,21 +1,12 @@
 {
   "name": "@0xcert/ethereum-dex",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Decentralized exchange implementation for the 0xcert protocol on the Ethereum blockchain.",
-  "main": "truffle.js",
-  "directories": {
-    "contracts": "contracts",
-    "migrations": "migrations",
-    "test": "test"
-  },
   "scripts": {
-    "compile": "truffle compile",
-    "console": "truffle console",
-    "flatten": "mkdir -p build && truffle-flattener contracts/**/*.sol >> build/bundle.sol",
-    "lint": "eslint './**/*.js?(x)'",
-    "migrate": "truffle migrate",
-    "networks": "truffle networks",
-    "test": "truffle test"
+    "compile": "specron compile",
+    "sandbox": "specron sandbox",
+    "prepublishOnly": "specron compile",
+    "test": "specron compile && specron test --require ts-node/register"
   },
   "author": "0xcert",
   "license": "MIT",
@@ -56,15 +47,11 @@
     "transactions"
   ],
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "truffle": "^4.1.11",
-    "truffle-flattener": "^1.2.5",
-    "ethjs-util": "^0.1.4",
-    "web3-utils": "^1.0.0-beta.30"
-  },
-  "dependencies": {
-    "@0xcert/ethereum-erc721": "^1.3.0",
-    "@0xcert/ethereum-utils": "^1.0.0",
-    "@0xcert/ethereum-erc20": "^1.2.0"
+    "@specron/cli": "latest",
+    "@specron/spec": "latest",
+    "lerna": "^2.11.0",
+    "ts-node": "^6.1.1",
+    "typescript": "^2.9.1",
+    "web3": "git+https://github.com/0xcert/web3.js.git#newAbiLib"
   }
 }

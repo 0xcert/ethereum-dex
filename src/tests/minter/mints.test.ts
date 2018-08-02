@@ -6,11 +6,23 @@ import { Spec } from '@specron/spec';
 
 const perform = new Spec();
 
-perform.test('Cat #1 <=> 10 ZXC', async (ctx) => {
+perform.test('10 ZXC => Cat #1', async (ctx) => {
   
 });
 
-perform.test('Cat #1 <=> no fee', async (ctx) => {
+perform.test('10 ZXC, 50 BNB => Cat #1', async (ctx) => {
+  
+});
+
+perform.test('Dog #1, Dog #2, Dog #3 => Cat #1', async (ctx) => {
+  
+});
+
+perform.test('Dog #1, Dog #2, Dog #3, 10 ZXC => Cat #1', async (ctx) => {
+  
+});
+
+perform.test('Dog #1, Fox #7, 10 ZXC => Cat #1', async (ctx) => {
   
 });
 
@@ -49,7 +61,7 @@ perform.test('fails if current time is after expirationTimestamp', async (ctx) =
 
 const cancel = new Spec();
 
-cancel.test('sucesfully', async (ctx) => {
+cancel.test('succeeds', async (ctx) => {
   
 });
 
@@ -58,6 +70,10 @@ cancel.test('fails when a third party tries to cancel it', async (ctx) => {
 });
 
 cancel.test('fails when trying to cancel an already performed mint', async (ctx) => {
+  
+});
+
+cancel.test('fails when trying to cancel an already canceled mint', async (ctx) => {
   
 });
 
@@ -70,8 +86,8 @@ cancel.test('fails when trying to cancel an already performed mint', async (ctx)
 
 const spec = new Spec();
 
-spec.spec('perform atomic mint', perform);
+spec.spec('perform an atomic mint', perform);
 
-spec.spec('cancel atomic mint', cancel);
+spec.spec('cancel an atomic mint', cancel);
 
 export default spec;

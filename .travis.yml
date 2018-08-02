@@ -2,3 +2,5 @@ language: node_js
 node_js:
   - "10"
   - "9"
+install:
+  - npm install -g lerna

@@ -49,9 +49,9 @@
   "devDependencies": {
     "@specron/cli": "latest",
     "@specron/spec": "latest",
+    "lerna": "^3.0.0-rc.0",
     "ts-node": "^6.1.1",
     "typescript": "^2.9.1",
-    "web3": "git+https://github.com/0xcert/web3.js.git#newAbiLib",
-    "lerna": "^3.0.0-rc.0"
+    "web3": "git+https://github.com/0xcert/web3.js.git#newAbiLib"
   }
 }

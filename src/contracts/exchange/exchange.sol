@@ -17,10 +17,10 @@ contract Exchange {
   struct TransferData 
   {
     address token;
-    int16 tokenType;
+    uint16 kind; // check other options like ERC165 or checking methods that exists.
     address from;
     address to;
-    address value;
+    uint256 value;
   }
 
   /**
@@ -34,16 +34,17 @@ contract Exchange {
     bytes32 r;
     bytes32 s;
     uint8 v;
+    uint16 kind;
   }
 
   /**
    * @dev Structure representing the data needed to do the swap.
    * @param maker Address of the one that made the claim.
    * @param taker Address of the one that is executing the claim.
-   * @param transfer Data of all the transfers that should accure it this swap.
+   * @param transfers Data of all the transfers that should accure it this swap.
    * @param signature Data from the signed claim.
    * @param seed Arbitrary number to facilitate uniqueness of the order's hash. Usually timestamp.
-   * @param expirationTimestamp Timestamp of when the claim expires. 0 if indefinet. 
+   * @param expiration Timestamp of when the claim expires. 0 if indefinet. 
    */
   struct SwapData 
   {
@@ -52,9 +53,9 @@ contract Exchange {
     TransferData[] transfers;
     SignatureData signature;
     uint256 seed;
-    uint256 expirationTimestamp;
+    uint256 expiration;
   }
-  
+
   constructor () 
     public
   {

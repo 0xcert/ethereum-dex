@@ -4,8 +4,25 @@ pragma experimental ABIEncoderV2;
 /**
  * @dev Decentralize exchange for fundgible and non-fundgible tokens powered by atomic swaps. 
  */
-contract Exchange {
+contract Exchange 
+{
+  /**
+   * @dev Enum of available signature kinds.
+   */
+  enum SignatureKind{
+    eth_sign,
+    trezor,
+    eip712
+  }
   
+  /**
+   * @dev Enum of available tokens kinds.
+   */
+  enum TokenKind{
+    erc20,
+    erc721
+  }
+
   /**
    * @dev Structure representing what to send and where.
    * @param token Address of the token we are sending (can be ERC20 or ERC721).
@@ -17,7 +34,7 @@ contract Exchange {
   struct TransferData 
   {
     address token;
-    uint16 kind; // Check other options like ERC165 or checking methods that exists.
+    TokenKind kind; // Check other options like ERC165 or checking methods that exists.
     address from;
     address to;
     uint256 value;
@@ -35,7 +52,7 @@ contract Exchange {
     bytes32 r;
     bytes32 s;
     uint8 v;
-    uint16 kind;
+    SignatureKind kind;
   }
 
   /**
@@ -62,4 +79,5 @@ contract Exchange {
   {
 
   }
+
 }

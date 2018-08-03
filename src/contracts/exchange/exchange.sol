@@ -8,6 +8,16 @@ contract Exchange
 {
   /**
    * @dev Enum of available signature kinds.
+   * @param eth_sign Signature using eth sign.
+   * @param trezor Signature from Trezor hardware wallet.
+   * It differs from web3.eth_sign in the encoding of message length
+   * (Bitcoin varint encoding vs ascii-decimal, the latter is not
+   * self-terminating which leads to ambiguities).
+   * See also:
+   * https://en.bitcoin.it/wiki/Protocol_documentation#Variable_length_integer
+   * https://github.com/trezor/trezor-mcu/blob/master/firmware/ethereum.c#L602
+   * https://github.com/trezor/trezor-mcu/blob/master/firmware/crypto.c#L36 
+   * @param eip721 Signature using eip721.
    */
   enum SignatureKind{
     eth_sign,
@@ -17,6 +27,8 @@ contract Exchange
   
   /**
    * @dev Enum of available tokens kinds.
+   * @param erc20 ERC20 standard tokens.
+   * @param erc721 ERC721 standard tokens.
    */
   enum TokenKind{
     erc20,

@@ -7,6 +7,11 @@ pragma experimental ABIEncoderV2;
 contract Exchange 
 {
   /**
+   * @dev Error constants.
+   */
+  string constant INVALID_SIGNATURE_KIND = "1001";
+
+  /**
    * @dev Enum of available signature kinds.
    * @param eth_sign Signature using eth sign.
    * @param trezor Signature from Trezor hardware wallet.
@@ -92,4 +97,57 @@ contract Exchange
 
   }
 
+  /**
+   * @dev Verifies if claim signature is valid.
+   * @param _signer address of signer.
+   * @param _claim Signed Keccak-256 hash.
+   * @param _signature Signature data.
+   */
+  function isValidSignature(
+    address _signer,
+    bytes32 _claim,
+    SignatureData _signature
+  )
+    public
+    pure
+    returns (bool)
+  {
+    if(_signature.kind == SignatureKind.eth_sign)
+    {
+      return _signer == ecrecover(
+        keccak256(
+          abi.encodePacked(
+            "\x19Ethereum Signed Message:\n32",
+            _claim
+          )
+        ),
+        _signature.v,
+        _signature.r,
+        _signature.s
+      );
+    } else if (_signature.kind == SignatureKind.trezor)
+    {
+      return _signer == ecrecover(
+        keccak256(
+          abi.encodePacked(
+            "\x19Ethereum Signed Message:\n\x20",
+            _claim
+          )
+        ),
+        _signature.v,
+        _signature.r,
+        _signature.s
+      );
+    } else if (_signature.kind == SignatureKind.eip712)
+    {
+      return _signer == ecrecover(
+        _claim,
+        _signature.v,
+        _signature.r,
+        _signature.s
+      );
+    }
+
+    revert(INVALID_SIGNATURE_KIND);
+  }
 }

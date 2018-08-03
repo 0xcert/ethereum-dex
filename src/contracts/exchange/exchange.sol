@@ -9,7 +9,7 @@ contract Exchange {
   /**
    * @dev Structure representing what to send and where.
    * @param token Address of the token we are sending (can be ERC20 or ERC721).
-   * @param tokenType Type od the token we are sending: 0 - ERC20, 1 - ERC721.
+   * @param kind Type od the token we are sending: 0 - ERC20, 1 - ERC721.
    * @param from Address of the sender.
    * @param to Address of the receiver.
    * @param value Amount of ERC20 or ID of ERC721.
@@ -17,7 +17,7 @@ contract Exchange {
   struct TransferData 
   {
     address token;
-    uint16 kind; // check other options like ERC165 or checking methods that exists.
+    uint16 kind; // Check other options like ERC165 or checking methods that exists.
     address from;
     address to;
     uint256 value;
@@ -28,6 +28,7 @@ contract Exchange {
    * @param r ECDSA signature parameter r.
    * @param s ECDSA signature parameter s.
    * @param v ECDSA signature parameter v.
+   * @param kind Type of signature: 0 - eth_sign, 1 - trezor, 2 - EIP712. 
    */
   struct SignatureData
   {

@@ -6,7 +6,7 @@
     "compile": "specron compile",
     "sandbox": "specron sandbox",
     "prepublishOnly": "specron compile",
-    "test": "specron compile && specron test --require ts-node/register"
+    "test": "specron compile && specron test --require ts-node/register --match ./src/tests/**/*.test.ts"
   },
   "author": "0xcert",
   "license": "MIT",
@@ -47,11 +47,14 @@
     "transactions"
   ],
   "devDependencies": {
-    "@specron/cli": "latest",
-    "@specron/spec": "latest",
+    "@specron/cli": "^0.0.12",
+    "@specron/spec": "^0.0.12",
     "lerna": "^2.11.0",
     "ts-node": "^6.1.1",
     "typescript": "^2.9.1",
     "web3": "git+https://github.com/0xcert/web3.js.git#newAbiLib"
+  },
+  "dependencies": {
+    "@0xcert/ethereum-erc721": "^1.10.0"
   }
 }

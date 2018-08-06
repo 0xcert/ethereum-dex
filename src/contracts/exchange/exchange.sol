@@ -43,7 +43,7 @@ contract Exchange
   /**
    * @dev Structure representing what to send and where.
    * @param token Address of the token we are sending (can be ERC20 or ERC721).
-   * @param kind Type od the token we are sending: 0 - ERC20, 1 - ERC721.
+   * @param kind Type of the token we are sending
    * @param from Address of the sender.
    * @param to Address of the receiver.
    * @param value Amount of ERC20 or ID of ERC721.
@@ -62,7 +62,7 @@ contract Exchange
    * @param r ECDSA signature parameter r.
    * @param s ECDSA signature parameter s.
    * @param v ECDSA signature parameter v.
-   * @param kind Type of signature: 0 - eth_sign, 1 - trezor, 2 - EIP712. 
+   * @param kind Type of signature. 
    */
   struct SignatureData
   {
@@ -86,7 +86,6 @@ contract Exchange
     address maker;
     address taker;
     TransferData[] transfers;
-    SignatureData signature;
     uint256 seed;
     uint256 expiration;
   }
@@ -97,6 +96,44 @@ contract Exchange
 
   }
 
+  /**
+   * @dev Calculates keccak-256 hash of SwapData from parameters.
+   * @param _swapData Data needed for atomic swap.
+   * @return keccak-hash of swap data.
+   */
+  function getSwapDataClaim(
+    SwapData _swapData
+  )
+    public
+    view
+    returns (bytes32)
+  {
+    bytes memory temp;
+
+    for(uint256 i = 0; i < _swapData.transfers.length; i++)
+    {
+      temp = abi.encodePacked(
+        temp,
+        _swapData.transfers[i].token,
+        _swapData.transfers[i].kind,
+        _swapData.transfers[i].from,
+        _swapData.transfers[i].to,
+        _swapData.transfers[i].value
+      );
+    }
+
+    return keccak256(
+      abi.encodePacked(
+        address(this),
+        _swapData.maker,
+        _swapData.taker,
+        temp,
+        _swapData.seed,
+        _swapData.expiration
+      )
+    );
+  }
+  
   /**
    * @dev Verifies if claim signature is valid.
    * @param _signer address of signer.

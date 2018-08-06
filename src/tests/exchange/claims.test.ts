@@ -63,8 +63,8 @@ rawClaim.test('from valid data', async (ctx) => {
         value: 1
       }
     ],
-    seed: 12, 
-    expiration: 23
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600
   }
 
   const exchange = ctx.get('exchange');
@@ -72,7 +72,7 @@ rawClaim.test('from valid data', async (ctx) => {
 
   // TODO(Tadej): generate hash locally an compare.
 
-  //ctx.is(hash, );
+  // ctx.is(hash, );
 });
 
 rawClaim.test('from invalid data', async (ctx) => {

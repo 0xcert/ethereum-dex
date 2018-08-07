@@ -47,6 +47,7 @@
     "transactions"
   ],
   "devDependencies": {
+    "@0xcert/ethereum-erc20": "^1.2.1",
     "@0xcert/ethereum-erc721": "^1.10.0",
     "@specron/cli": "^0.0.19",
     "@specron/spec": "^0.0.19",

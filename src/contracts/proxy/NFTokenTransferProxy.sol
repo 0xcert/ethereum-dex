@@ -72,15 +72,15 @@ contract NFTokenTransferProxy is
    * @param target Address to authorize.
    */
   function addAuthorizedAddress(
-    address target
+    address _target
   )
     external
     onlyOwner
-    targetNotAuthorized(target)
+    targetNotAuthorized(_target)
   {
-    authorized[target] = true;
-    authorities.push(target);
-    emit LogAuthorizedAddressAdded(target, msg.sender);
+    authorized[_target] = true;
+    authorities.push(_target);
+    emit LogAuthorizedAddressAdded(_target, msg.sender);
   }
 
   /**
@@ -88,21 +88,21 @@ contract NFTokenTransferProxy is
    * @param target Address to remove authorization from.
    */
   function removeAuthorizedAddress(
-    address target
+    address _target
   )
     external
     onlyOwner
-    targetAuthorized(target)
+    targetAuthorized(_target)
   {
-    delete authorized[target];
+    delete authorized[_target];
     for (uint i = 0; i < authorities.length; i++) {
-      if (authorities[i] == target) {
+      if (authorities[i] == _target) {
         authorities[i] = authorities[authorities.length - 1];
         authorities.length -= 1;
         break;
       }
     }
-    emit LogAuthorizedAddressRemoved(target, msg.sender);
+    emit LogAuthorizedAddressRemoved(_target, msg.sender);
   }
 
   /**

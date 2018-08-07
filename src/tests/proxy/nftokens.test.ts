@@ -45,7 +45,7 @@ spec.test('fails when trying to add an already authorized address', async (ctx) 
   const owner = ctx.get('owner');
   const bob = ctx.get('bob');
   await nftProxy.methods.addAuthorizedAddress(bob).send({from: owner});
-  ctx.reverts(() => nftProxy.methods.addAuthorizedAddress(bob).send({from: owner}));
+  await ctx.reverts(() => nftProxy.methods.addAuthorizedAddress(bob).send({from: owner}));
 });
 
 spec.test('removes authorized address', async (ctx) => {
@@ -64,7 +64,7 @@ spec.test('fails when trying to remove an already unauthorized address', async (
   const nftProxy = ctx.get('nftProxy');
   const owner = ctx.get('owner');
   const bob = ctx.get('bob');
-  ctx.reverts(() => nftProxy.methods.removeAuthorizedAddress(bob).send({from: owner}));
+  await ctx.reverts(() => nftProxy.methods.removeAuthorizedAddress(bob).send({from: owner}));
 });
 
 spec.test('transfers an NFT', async (ctx) => {
@@ -115,7 +115,7 @@ spec.test('fails if transfer is triggered by an unauthorized address', async (ct
     });
 
   await cat.methods.approve(nftProxy._address, 1).send({from: jane});
-  ctx.reverts(() => nftProxy.methods.transferFrom(cat._address, jane, sara, 1).send({from: bob,  gas: 4000000}));
+  await ctx.reverts(() => nftProxy.methods.transferFrom(cat._address, jane, sara, 1).send({from: bob,  gas: 4000000}));
 });
 
 export default spec;

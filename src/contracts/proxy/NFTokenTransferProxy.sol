@@ -69,7 +69,7 @@ contract NFTokenTransferProxy is
 
   /**
    * @dev Authorizes an address.
-   * @param target Address to authorize.
+   * @param _target Address to authorize.
    */
   function addAuthorizedAddress(
     address _target
@@ -85,7 +85,7 @@ contract NFTokenTransferProxy is
 
   /**
    * @dev Removes authorizion of an address.
-   * @param target Address to remove authorization from.
+   * @param _target Address to remove authorization from.
    */
   function removeAuthorizedAddress(
     address _target

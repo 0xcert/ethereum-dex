@@ -20,8 +20,8 @@ interface Data {
  */
 
 const spec = new Spec<Data>();
-const raw = new Spec<Data>();
-const signed = new Spec<Data>();
+const specRaw = new Spec<Data>();
+const specSigned = new Spec<Data>();
 
 export default spec;
 
@@ -30,19 +30,20 @@ export default spec;
  */
 
 spec.beforeEach(async (ctx) => {
-  const exchange = await ctx.requireContract({
+  const exchange = await ctx.deploy({
     src: './build/Exchange.json',
+    args: [],
   });
   ctx.set('exchange', exchange);
 });
 
 spec.beforeEach(async (ctx) => {
-  const cat = await ctx.requireContract({ 
-    src: './node_modules/@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+  const cat = await ctx.deploy({ 
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
     args: ['cat', 'CAT'],
   });
   await cat.methods
-    .mint(ctx.get('jane'), 1, 'http://0xcert.org')
+    .mint(ctx.get('jane'), 1, '0xcert.org')
     .send({
       from: ctx.get('owner'),
       gas: 4000000,
@@ -51,67 +52,65 @@ spec.beforeEach(async (ctx) => {
 });
 
 spec.beforeEach(async (ctx) => {
-  const accounts = await ctx.getAccounts();
+  const accounts = await ctx.web3.eth.getAccounts();
   ctx.set('owner', accounts[0]);
   ctx.set('bob', accounts[1]);
   ctx.set('jane', accounts[2]);
   ctx.set('sara', accounts[3]);
 });
 
-spec.spec('generate claim', raw);
+spec.spec('generate claim', specRaw);
 
-raw.test('from valid data', async (ctx) => {
+specRaw.test('from valid data', async (ctx) => {
   const exchange = ctx.get('exchange');
+  const transfer = {
+    token: ctx.get('cat')._address,
+    kind: 1,
+    from: ctx.get('jane'),
+    to: ctx.get('sara'),
+    value: 1,
+  };
   const claim = {
     maker: ctx.get('jane'),
     taker: ctx.get('sara'),
-    transfers: [
-      {
-        token: ctx.get('cat')._address,
-        kind: 1,
-        from: ctx.get('jane'),
-        to: ctx.get('sara'),
-        value: 1,
-      },
-    ],
+    transfers: [transfer],
     seed: new Date().getTime(), 
     expiration: new Date().getTime() + 600,
   };
-  const tuple = ctx.toTuple(claim);
+  const tuple = ctx.tuple(claim);
   const hash = await exchange.methods.getSwapDataClaim(tuple).call();
   // TODO(Tadej): generate hash locally and compare.
   // TODO(Tadej): ctx.is(hash);
 });
 
-raw.test('from invalid data', async (ctx) => {
+specRaw.test('from invalid data', async (ctx) => {
   // TODO(Tadej): add test when we know how to generate hash locally.
 });
 
-spec.spec('validate signed claim', signed);
+spec.spec('validate signed claim', specSigned);
 
-signed.beforeEach(async (ctx) => {
+specSigned.beforeEach(async (ctx) => {
+  const transfer = {
+    token: ctx.get('cat')._address,
+    kind: 1,
+    from: ctx.get('jane'),
+    to: ctx.get('sara'),
+    value: 1,
+  };
   const claim = {
     maker: ctx.get('jane'),
     taker: ctx.get('sara'),
-    transfers: [
-      {
-        token: ctx.get('cat')._address,
-        kind: 1,
-        from: ctx.get('jane'),
-        to: ctx.get('sara'),
-        value: 1,
-      },
-    ],
+    transfers: [transfer],
     seed: new Date().getTime(), 
     expiration: new Date().getTime() + 600,
   };
   const exchange = ctx.get('exchange');
-  const tuple = ctx.toTuple(claim);
+  const tuple = ctx.tuple(claim);
   const hash = await exchange.methods.getSwapDataClaim(tuple).call();
   ctx.set('hash', hash);
 });
 
-signed.beforeEach(async (ctx) => {
+specSigned.beforeEach(async (ctx) => {
   const hash = ctx.get('hash');
   const account = ctx.get('jane');
   const signature = await ctx.web3.eth.sign(hash, account);
@@ -124,33 +123,33 @@ signed.beforeEach(async (ctx) => {
   ctx.set('signature', signatureData);
 });
 
-signed.test('with valid signature data', async (ctx) => {
+specSigned.test('with valid signature data', async (ctx) => {
   const exchange = ctx.get('exchange');
   const account = ctx.get('jane');
   const hash = ctx.get('hash');
   const signature = ctx.get('signature');
-  const tuple = ctx.toTuple(signature);
+  const tuple = ctx.tuple(signature);
   const valid = await exchange.methods.isValidSignature(account, hash, tuple).call();
   ctx.true(valid);
 });
 
-signed.test('with invalid signature data', async (ctx) => {
+specSigned.test('with invalid signature data', async (ctx) => {
   const exchange = ctx.get('exchange');
   const signatureData = ctx.get('signature');
   signatureData.v = 30;
   const account = ctx.get('jane');
   const hash = ctx.get('hash');
-  const tuple = ctx.toTuple(signatureData);
+  const tuple = ctx.tuple(signatureData);
   const valid = await exchange.methods.isValidSignature(account, hash, tuple).call();
   ctx.false(valid);
 });
 
-signed.test('from a third party account', async (ctx) => {
+specSigned.test('from a third party account', async (ctx) => {
   const exchange = ctx.get('exchange');
   const account = ctx.get('sara');
   const hash = ctx.get('hash');
   const signature = ctx.get('signature');
-  const tuple = ctx.toTuple(signature);
+  const tuple = ctx.tuple(signature);
   const valid = await exchange.methods.isValidSignature(account, hash, tuple).call();
   ctx.false(valid);
 });

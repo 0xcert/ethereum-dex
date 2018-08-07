@@ -77,7 +77,7 @@ spec.test('transfers an NFT', async (ctx) => {
   await nftProxy.methods.addAuthorizedAddress(bob).send({from: owner});
 
   const cat = await ctx.deploy({ 
-    src: './node_modules/@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
     args: ['cat', 'CAT'],
   });
 
@@ -103,7 +103,7 @@ spec.skip('fails if transfer is triggered by an unauthorized address', async (ct
   const sara = ctx.get('sara');
 
   const cat = await ctx.deploy({ 
-    src: './node_modules/@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
     args: ['cat', 'CAT'],
   });
 

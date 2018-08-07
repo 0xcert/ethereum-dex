@@ -1,14 +1,12 @@
 pragma solidity 0.4.24;
 
-/** 
- * @dev based od: https://github.com/0xProject/contracts/blob/master/contracts/TokenTransferProxy.sol
- */
 import "@0xcert/ethereum-erc721/contracts/tokens/ERC721.sol";
 import "@0xcert/ethereum-utils/contracts/ownership/Claimable.sol";
 
 /** 
  * @title NFTokenTransferProxy - Transfers none-fundgible tokens on behalf of contracts that have 
  * been approved via decentralized governance.
+ * @dev based on:https://github.com/0xProject/contracts/blob/master/contracts/TokenTransferProxy.sol
  */
 contract NFTokenTransferProxy is 
   Claimable 

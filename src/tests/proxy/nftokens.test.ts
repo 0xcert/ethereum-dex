@@ -15,7 +15,7 @@ interface Data {
 const spec = new Spec<Data>();
 
 spec.beforeEach(async (ctx) => {
-  const accounts = await ctx.getAccounts();
+  const accounts = await ctx.web3.eth.getAccounts();
   ctx.set('owner', accounts[0]);
   ctx.set('bob', accounts[1]);
   ctx.set('jane', accounts[2]);
@@ -23,7 +23,7 @@ spec.beforeEach(async (ctx) => {
 });
 
 spec.beforeEach(async (ctx) => {
-  const nftProxy = await ctx.requireContract({
+  const nftProxy = await ctx.deploy({
     src: './build/NFTokenTransferProxy.json',
   });
   ctx.set('nftProxy', nftProxy);
@@ -76,11 +76,11 @@ spec.test('transfers an NFT', async (ctx) => {
 
   await nftProxy.methods.addAuthorizedAddress(bob).send({from: owner});
 
-  const cat = await ctx.requireContract({ 
+  const cat = await ctx.deploy({ 
     src: './node_modules/@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
     args: ['cat', 'CAT'],
   });
-  
+
   await cat.methods
     .mint(jane, 1, 'http://0xcert.org')
     .send({
@@ -102,7 +102,7 @@ spec.skip('fails if transfer is triggered by an unauthorized address', async (ct
   const jane = ctx.get('jane');
   const sara = ctx.get('sara');
 
-  const cat = await ctx.requireContract({ 
+  const cat = await ctx.deploy({ 
     src: './node_modules/@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
     args: ['cat', 'CAT'],
   });

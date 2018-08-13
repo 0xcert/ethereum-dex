@@ -24,7 +24,8 @@ spec.beforeEach(async (ctx) => {
 
 spec.beforeEach(async (ctx) => {
   const nftProxy = await ctx.deploy({
-    src: './build/NFTokenTransferProxy.json',
+    src: './build/nftokens-transfer-proxy.json',
+    contract: 'NFTokenTransferProxy',
   });
   ctx.set('nftProxy', nftProxy);
 });

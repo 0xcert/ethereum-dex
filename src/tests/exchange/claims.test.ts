@@ -31,7 +31,8 @@ export default spec;
 
 spec.beforeEach(async (ctx) => {
   const exchange = await ctx.deploy({
-    src: './build/Exchange.json',
+    src: './build/exchange.json',
+    contract: 'Exchange',
     args: [],
   });
   ctx.set('exchange', exchange);

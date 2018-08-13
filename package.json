@@ -49,11 +49,11 @@
   "devDependencies": {
     "@0xcert/ethereum-erc20": "^1.2.1",
     "@0xcert/ethereum-erc721": "^1.10.0",
-    "@specron/cli": "^0.0.22",
-    "@specron/spec": "^0.0.22",
+    "@specron/cli": "^0.0.27",
+    "@specron/spec": "^0.0.27",
     "lerna": "^2.11.0",
-    "ts-node": "^6.1.1",
-    "typescript": "^2.9.1",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.0.1",
     "web3": "git+https://github.com/0xcert/web3.js.git#newAbiLib"
   }
 }

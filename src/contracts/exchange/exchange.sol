@@ -10,6 +10,8 @@ contract Exchange
    * @dev Error constants.
    */
   string constant INVALID_SIGNATURE_KIND = "1001";
+  string constant INVALID_TOKEN_TRANSFER_PROXY = "1002";
+  string constant INVALID_NF_TOKEN_TRANSFER_PROXY = "1003";
 
   /**
    * @dev Enum of available signature kinds.
@@ -90,10 +92,28 @@ contract Exchange
     uint256 expiration;
   }
 
-  constructor () 
+  /** 
+   * @dev Proxy contract addresses.
+   */
+  address public tokenTransferProxy; 
+  address public nfTokenTransferProxy; 
+
+  /**
+   * @dev Sets Token proxy address and NFT Proxy address.
+   * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
+   * @param _nfTokenTransferProxy Address pointing to NFTokenTransferProxy contract.
+   */
+  constructor (
+    address _tokenTransferProxy, 
+    address _nfTokenTransferProxy
+  ) 
     public
   {
+    require(_tokenTransferProxy != address(0), INVALID_TOKEN_TRANSFER_PROXY);
+    require(_nfTokenTransferProxy != address(0), INVALID_NF_TOKEN_TRANSFER_PROXY);
 
+    tokenTransferProxy = _tokenTransferProxy;
+    nfTokenTransferProxy = _nfTokenTransferProxy;
   }
 
   /**

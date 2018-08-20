@@ -24,7 +24,8 @@ spec.beforeEach(async (ctx) => {
 
 spec.beforeEach(async (ctx) => {
   const xcertProxy = await ctx.deploy({
-    src: './build/XcertMintProxy.json',
+    src: './build/xcert-mint-proxy.json',
+    contract: 'XcertMintProxy'
   });
   ctx.set('xcertProxy', xcertProxy);
 });

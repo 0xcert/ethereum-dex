@@ -167,7 +167,8 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
   };
 
   const signatureDataTuple = ctx.tuple(signatureData);
-  await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: bob, gas: 4000000});
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: bob, gas: 4000000});
+  ctx.not(logs.events.PerformSwap, undefined);
 
   const cat1Owner = await cat.methods.ownerOf(1).call();
   const cat2Owner = await cat.methods.ownerOf(2).call();

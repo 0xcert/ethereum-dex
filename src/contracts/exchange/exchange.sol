@@ -125,6 +125,24 @@ contract Exchange
   mapping(bytes32 => bool) public swapPerformed;
 
   /**
+   * @dev This event emmits when tokens change ownership.
+   */
+  event PerformSwap(
+    address indexed _maker,
+    address indexed _taker,
+    bytes32 _claim
+  );
+
+  /**
+   * @dev This event emmits when transfer order is cancelled.
+   */
+  event CancelSwap(
+    address indexed _maker,
+    address indexed _taker,
+    bytes32 _claim
+  );
+
+  /**
    * @dev Sets Token proxy address and NFT Proxy address.
    * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
    * @param _nfTokenTransferProxy Address pointing to NFTokenTransferProxy contract.
@@ -173,7 +191,11 @@ contract Exchange
     _makeTransfers(_data.transfers);
 
     swapPerformed[claim] = true;
-    // TODO(Tadej): emit swap event.
+    emit PerformSwap(
+      _data.maker,
+      _data.taker,
+      claim
+    );
   }
 
   /**

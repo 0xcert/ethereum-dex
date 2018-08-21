@@ -21,7 +21,10 @@ contract Exchange
   string constant TAKER_EQUAL_TO_MAKER = "2002";
   string constant CLAIM_EXPIRED = "2003";
   string constant INVALID_SIGNATURE = "2004";
-  string constant ERC20_TRANSFER_FAILED = "2005";
+  string constant SWAP_CANCELED = "2005";
+  string constant SWAP_ALREADY_PERFORMED = "2006";
+  string constant ERC20_TRANSFER_FAILED = "2007";
+  string constant ERC721_TRANSFER_FAILED = "2008";
 
 
   /**
@@ -112,6 +115,16 @@ contract Exchange
   address public nfTokenTransferProxy; 
 
   /**
+   * @dev Mapping of all cancelled transfers.
+   */
+  mapping(bytes32 => bool) public swapCancelled;
+
+  /**
+   * @dev Mapping of all performed transfers.
+   */
+  mapping(bytes32 => bool) public swapPerformed;
+
+  /**
    * @dev Sets Token proxy address and NFT Proxy address.
    * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
    * @param _nfTokenTransferProxy Address pointing to NFTokenTransferProxy contract.
@@ -154,12 +167,12 @@ contract Exchange
       INVALID_SIGNATURE
     );
 
-    // TODO(Tadej): check if swap already performed.
-    // TODO(Tadej): check if swap is canceled.
+    require(!swapCancelled[claim], SWAP_CANCELED);
+    require(!swapPerformed[claim], SWAP_ALREADY_PERFORMED);
 
     _makeTransfers(_data.transfers);
 
-    // TODO(Tadej): set swap as performed.
+    swapPerformed[claim] = true;
     // TODO(Tadej): emit swap event.
   }
 

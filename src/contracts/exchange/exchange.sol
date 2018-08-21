@@ -26,7 +26,8 @@ contract Exchange
    * https://github.com/trezor/trezor-mcu/blob/master/firmware/crypto.c#L36 
    * @param eip721 Signature using eip721.
    */
-  enum SignatureKind{
+  enum SignatureKind
+  {
     eth_sign,
     trezor,
     eip712
@@ -37,7 +38,8 @@ contract Exchange
    * @param erc20 ERC20 standard tokens.
    * @param erc721 ERC721 standard tokens.
    */
-  enum TokenKind{
+  enum TokenKind
+  {
     erc20,
     erc721
   }

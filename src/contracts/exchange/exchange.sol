@@ -1,6 +1,9 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
+import "../proxy/token-transfer-proxy.sol";
+import "../proxy/nftokens-transfer-proxy.sol";
+
 /**
  * @dev Decentralize exchange for fundgible and non-fundgible tokens powered by atomic swaps. 
  */
@@ -208,5 +211,30 @@ contract Exchange
     }
 
     revert(INVALID_SIGNATURE_KIND);
+  }
+
+  /*
+   * @dev Transfers ERC20 tokens via TokenTransferProxy using transferFrom function.
+   * @param _token Address of token to transferFrom.
+   * @param _from Address transfering token.
+   * @param _to Address receiving token.
+   * @param _value Amount of token to transfer.
+   * @return Success of token transfer.
+   */
+  function _transferViaTokenTransferProxy(
+    address _token,
+    address _from,
+    address _to,
+    uint _value
+  )
+    internal
+    returns (bool)
+  {
+    return TokenTransferProxy(tokenTransferProxy).transferFrom(
+      _token,
+      _from,
+      _to,
+      _value
+    );
   }
 }

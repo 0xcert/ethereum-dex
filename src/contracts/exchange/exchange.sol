@@ -213,13 +213,12 @@ contract Exchange
     revert(INVALID_SIGNATURE_KIND);
   }
 
-  /*
+  /** 
    * @dev Transfers ERC20 tokens via TokenTransferProxy using transferFrom function.
    * @param _token Address of token to transferFrom.
    * @param _from Address transfering token.
    * @param _to Address receiving token.
    * @param _value Amount of token to transfer.
-   * @return Success of token transfer.
    */
   function _transferViaTokenTransferProxy(
     address _token,
@@ -236,5 +235,24 @@ contract Exchange
       _to,
       _value
     );
+  }
+
+  /**
+   * @dev Transfers NFToken via NFTokenProxy using transferFrom function.
+   * @param _nfToken Address of NFToken to transfer.
+   * @param _from Address sending NFToken.
+   * @param _to Address receiving NFToken.
+   * @param _id Id of transfering NFToken.
+   */
+  function _transferViaNFTokenTransferProxy(
+    address _nfToken,
+    address _from,
+    address _to,
+    uint256 _id
+  )
+    internal
+  {
+    NFTokenTransferProxy(nfTokenTransferProxy)
+      .transferFrom(_nfToken, _from, _to, _id);
   }
 }

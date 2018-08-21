@@ -1,6 +1,14 @@
 import { Spec } from '@specron/spec';
 
 /**
+ * Test definition.
+ * 
+ * ERC20: BNB, OMG, BAT, GNT, ZXC
+ * ERC721: Cat, Dog, Fox, Bee, Ant, Ape, Pig
+ */
+
+
+/**
  * Spec context interfaces.
  */
 
@@ -101,11 +109,10 @@ spec.beforeEach(async (ctx) => {
 });
 
 /**
- * Test definition.
- * 
- * ERC20: BNB, OMG, BAT, GNT, ZXC
- * ERC721: Cat, Dog, Fox, Bee, Ant, Ape, Pig
+ * Perform swap.
  */
+
+spec.spec('perform an atomic swap', perform);
 
 /**
  * ERC721s.
@@ -121,9 +128,6 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
   const bob = ctx.get('bob');
   const cat = ctx.get('cat');
 
-  console.log("jane: ", jane);
-  console.log("exchange: ", exchange);
-  console.log("cat: ", cat);
   await cat.methods.approve(nftProxy._address, 1).send({from: jane});
   await cat.methods.approve(nftProxy._address, 2).send({from: bob});
 
@@ -151,10 +155,10 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
     expiration: new Date().getTime() + 600,
   };
 
-  const claim = ctx.tuple(swapData);
-  const hash = await exchange.methods.getSwapDataClaim(claim).call();
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
 
-  const signature = await ctx.web3.eth.sign(hash, jane);
+  const signature = await ctx.web3.eth.sign(claim, jane);
   const signatureData = {
     r: signature.substr(0, 66),
     s: `0x${signature.substr(66, 64)}`,
@@ -162,7 +166,8 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
     kind: 0,
   };
 
-  await exchange.methods.swap(swapData, signatureData).send({from: bob});
+  const signatureDataTuple = ctx.tuple(signatureData);
+  await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: bob, gas: 4000000});
 
   const cat1Owner = await cat.methods.ownerOf(1).call();
   const cat2Owner = await cat.methods.ownerOf(2).call();
@@ -203,12 +208,6 @@ perform.spec('between ERC721s and ERC20s', erc721sErc20s);
 erc721sErc20s.test('Cat #1, Dog #5, 3 OMG <=> Cat #3, Fox #1, 30 BAT, 5000 BNB', async (ctx) => {
   
 });
-
-/**
- * Perform swap.
- */
-
-spec.spec('perform an atomic swap', perform);
 
 
 /**

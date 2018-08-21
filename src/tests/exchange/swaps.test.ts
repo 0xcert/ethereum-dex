@@ -40,6 +40,29 @@ spec.beforeEach(async (ctx) => {
 });
 
 spec.beforeEach(async (ctx) => {
+  const cat = await ctx.deploy({ 
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+    args: ['cat', 'CAT'],
+  });
+
+  await cat.methods
+    .mint(ctx.get('jane'), 1, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
+
+  await cat.methods
+    .mint(ctx.get('bob'), 2, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
+
+  ctx.set('cat', cat);
+});
+
+spec.beforeEach(async (ctx) => {
   const tokenProxy = await ctx.deploy({
     src: './build/token-transfer-proxy.json',
     contract: 'TokenTransferProxy'
@@ -90,9 +113,62 @@ spec.beforeEach(async (ctx) => {
 
 perform.spec('between ERC721s', erc721s);
 
-
 erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
-  
+
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  console.log("jane: ", jane);
+  console.log("exchange: ", exchange);
+  console.log("cat: ", cat);
+  await cat.methods.approve(nftProxy._address, 1).send({from: jane});
+  await cat.methods.approve(nftProxy._address, 2).send({from: bob});
+
+  const transfer1 = {
+    token: ctx.get('cat')._address,
+    kind: 1,
+    from: ctx.get('jane'),
+    to: ctx.get('bob'),
+    value: 1,
+  };
+
+  const transfer2 = {
+    token: ctx.get('cat')._address,
+    kind: 1,
+    from: ctx.get('bob'),
+    to: ctx.get('jane'),
+    value: 2,
+  };
+
+  const swapData = {
+    maker: ctx.get('jane'),
+    taker: ctx.get('bob'),
+    transfers: [transfer1, transfer2],
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+
+  const claim = ctx.tuple(swapData);
+  const hash = await exchange.methods.getSwapDataClaim(claim).call();
+
+  const signature = await ctx.web3.eth.sign(hash, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+
+  await exchange.methods.swap(swapData, signatureData).send({from: bob});
+
+  const cat1Owner = await cat.methods.ownerOf(1).call();
+  const cat2Owner = await cat.methods.ownerOf(2).call();
+
+  ctx.is(cat1Owner, bob);
+  ctx.is(cat2Owner, jane);
 });
 
 erc721s.test('Cat #1, Cat #4 <=> Cat #2', async (ctx) => {

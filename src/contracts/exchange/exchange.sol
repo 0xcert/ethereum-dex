@@ -12,9 +12,17 @@ contract Exchange
   /**
    * @dev Error constants.
    */
-  string constant INVALID_SIGNATURE_KIND = "1001";
-  string constant INVALID_TOKEN_TRANSFER_PROXY = "1002";
-  string constant INVALID_NF_TOKEN_TRANSFER_PROXY = "1003";
+  string constant INVALID_TOKEN_TRANSFER_PROXY = "1001";
+  string constant INVALID_NF_TOKEN_TRANSFER_PROXY = "1002";
+  string constant INVALID_SIGNATURE_KIND = "1003";
+  string constant INVALID_TOKEN_KIND = "1004";
+
+  string constant TAKER_NOT_EQUAL_TO_SENDER = "2001";
+  string constant TAKER_EQUAL_TO_MAKER = "2002";
+  string constant CLAIM_EXPIRED = "2003";
+  string constant INVALID_SIGNATURE = "2004";
+  string constant ERC20_TRANSFER_FAILED = "2005";
+
 
   /**
    * @dev Enum of available signature kinds.
@@ -122,6 +130,40 @@ contract Exchange
   }
 
   /**
+   * @dev Performs the ERC721/ERC20 atomic swap.
+   * @param _data Data required to make the swap.
+   * @param _signature Data from the signature. 
+   */
+  function swap(
+    SwapData _data,
+    SignatureData _signature
+  )
+    public 
+  {
+    require(_data.taker == msg.sender, TAKER_NOT_EQUAL_TO_SENDER);
+    require(_data.taker != _data.maker, TAKER_EQUAL_TO_MAKER);
+    require(_data.expiration >= now, CLAIM_EXPIRED);
+
+    bytes32 claim = getSwapDataClaim(_data);
+    require(
+      isValidSignature(
+        _data.maker,
+        claim,
+        _signature
+      ), 
+      INVALID_SIGNATURE
+    );
+
+    // TODO(Tadej): check if swap already performed.
+    // TODO(Tadej): check if swap is canceled.
+
+    _makeTransfers(_data.transfers);
+
+    // TODO(Tadej): set swap as performed.
+    // TODO(Tadej): emit swap event.
+  }
+
+  /**
    * @dev Calculates keccak-256 hash of SwapData from parameters.
    * @param _swapData Data needed for atomic swap.
    * @return keccak-hash of swap data.
@@ -211,6 +253,43 @@ contract Exchange
     }
 
     revert(INVALID_SIGNATURE_KIND);
+  }
+
+  /**
+   * @dev Helper function that makes transfes.
+   * @param _transfers Data needed for transfers.
+   */
+  function _makeTransfers(
+    TransferData[] _transfers
+  )
+    private
+  {
+    for(uint256 i = 0; i < _transfers.length; i++)
+    {
+      if(_transfers[i].kind == TokenKind.erc20)
+      {
+        require(
+          _transferViaTokenTransferProxy(
+            _transfers[i].token,
+            _transfers[i].from,
+            _transfers[i].to,
+            _transfers[i].value
+          ),
+          ERC20_TRANSFER_FAILED
+        );
+      }else if(_transfers[i].kind == TokenKind.erc721)
+      {
+        _transferViaNFTokenTransferProxy(
+          _transfers[i].token,
+          _transfers[i].from,
+          _transfers[i].to,
+          _transfers[i].value
+        );
+      }else 
+      {
+        revert(INVALID_TOKEN_KIND);
+      }
+    }
   }
 
   /** 

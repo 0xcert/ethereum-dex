@@ -15,6 +15,7 @@ interface Data {
   sara?: string;
   signature?: any;
   hash?: string;
+  randomAddress?: string;
 }
 
 /**
@@ -33,6 +34,8 @@ spec.beforeEach(async (ctx) => {
   ctx.set('bob', accounts[1]);
   ctx.set('jane', accounts[2]);
   ctx.set('sara', accounts[3]);
+  const randomAddress = '0x0000000000000000000000000000000000000001';
+  ctx.set('randomAddress', randomAddress);
 });
 
 spec.beforeEach(async (ctx) => {
@@ -50,41 +53,14 @@ spec.beforeEach(async (ctx) => {
 });
 
 spec.beforeEach(async (ctx) => {
-  const tokenProxy = await ctx.deploy({
-    src: './build/token-transfer-proxy.json',
-    contract: 'TokenTransferProxy'
-  });
-  ctx.set('tokenProxy', tokenProxy);
-});
-
-spec.beforeEach(async (ctx) => {
-  const nftProxy = await ctx.deploy({
-    src: './build/nftokens-transfer-proxy.json',
-    contract: 'NFTokenTransferProxy',
-  });
-  ctx.set('nftProxy', nftProxy);
-});
-
-spec.beforeEach(async (ctx) => {
-  const tokenProxy = ctx.get('tokenProxy');
-  const nftProxy = ctx.get('nftProxy');
+  const randomAddress = ctx.get('randomAddress');
 
   const exchange = await ctx.deploy({
     src: './build/exchange.json',
     contract: 'Exchange',
-    args: [tokenProxy._address, nftProxy._address],
+    args: [randomAddress, randomAddress],
   });
   ctx.set('exchange', exchange);
-});
-
-spec.beforeEach(async (ctx) => {
-  const tokenProxy = ctx.get('tokenProxy');
-  const nftProxy = ctx.get('nftProxy');
-  const exchange = ctx.get('exchange');
-  const owner = ctx.get('owner');
-
-  await tokenProxy.methods.addAuthorizedAddress(exchange._address).send({from: owner});
-  await nftProxy.methods.addAuthorizedAddress(exchange._address).send({from: owner});
 });
 
 /**

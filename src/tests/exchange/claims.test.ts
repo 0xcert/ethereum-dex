@@ -28,41 +28,11 @@ const specSigned = new Spec<Data>();
 export default spec;
 
 spec.beforeEach(async (ctx) => {
-  const tokenProxy = ctx.get('tokenProxy');
-  const nftProxy = ctx.get('nftProxy');
-  const exchange = ctx.get('exchange');
-  const owner = ctx.get('owner');
-
-  await tokenProxy.methods.addAuthorizedAddress(exchange._address).send({from: owner});
-  await nftProxy.methods.addAuthorizedAddress(exchange._address).send({from: owner});
-});
-
-spec.beforeEach(async (ctx) => {
-  const tokenProxy = ctx.get('tokenProxy');
-  const nftProxy = ctx.get('nftProxy');
-
-  const exchange = await ctx.deploy({
-    src: './build/exchange.json',
-    contract: 'Exchange',
-    args: [tokenProxy._address, nftProxy._address],
-  });
-  ctx.set('exchange', exchange);
-});
-
-spec.beforeEach(async (ctx) => {
-  const nftProxy = await ctx.deploy({
-    src: './build/nftokens-transfer-proxy.json',
-    contract: 'NFTokenTransferProxy',
-  });
-  ctx.set('nftProxy', nftProxy);
-});
-
-spec.beforeEach(async (ctx) => {
-  const tokenProxy = await ctx.deploy({
-    src: './build/token-transfer-proxy.json',
-    contract: 'TokenTransferProxy'
-  });
-  ctx.set('tokenProxy', tokenProxy);
+  const accounts = await ctx.web3.eth.getAccounts();
+  ctx.set('owner', accounts[0]);
+  ctx.set('bob', accounts[1]);
+  ctx.set('jane', accounts[2]);
+  ctx.set('sara', accounts[3]);
 });
 
 spec.beforeEach(async (ctx) => {
@@ -80,11 +50,41 @@ spec.beforeEach(async (ctx) => {
 });
 
 spec.beforeEach(async (ctx) => {
-  const accounts = await ctx.web3.eth.getAccounts();
-  ctx.set('owner', accounts[0]);
-  ctx.set('bob', accounts[1]);
-  ctx.set('jane', accounts[2]);
-  ctx.set('sara', accounts[3]);
+  const tokenProxy = await ctx.deploy({
+    src: './build/token-transfer-proxy.json',
+    contract: 'TokenTransferProxy'
+  });
+  ctx.set('tokenProxy', tokenProxy);
+});
+
+spec.beforeEach(async (ctx) => {
+  const nftProxy = await ctx.deploy({
+    src: './build/nftokens-transfer-proxy.json',
+    contract: 'NFTokenTransferProxy',
+  });
+  ctx.set('nftProxy', nftProxy);
+});
+
+spec.beforeEach(async (ctx) => {
+  const tokenProxy = ctx.get('tokenProxy');
+  const nftProxy = ctx.get('nftProxy');
+
+  const exchange = await ctx.deploy({
+    src: './build/exchange.json',
+    contract: 'Exchange',
+    args: [tokenProxy._address, nftProxy._address],
+  });
+  ctx.set('exchange', exchange);
+});
+
+spec.beforeEach(async (ctx) => {
+  const tokenProxy = ctx.get('tokenProxy');
+  const nftProxy = ctx.get('nftProxy');
+  const exchange = ctx.get('exchange');
+  const owner = ctx.get('owner');
+
+  await tokenProxy.methods.addAuthorizedAddress(exchange._address).send({from: owner});
+  await nftProxy.methods.addAuthorizedAddress(exchange._address).send({from: owner});
 });
 
 /**

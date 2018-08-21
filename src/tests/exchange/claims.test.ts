@@ -6,8 +6,6 @@ import { Spec } from '@specron/spec';
 
 interface Data {
   exchange?: any;
-  tokenProxy?: any;
-  nftProxy?: any;
   cat?: any;
   owner?: string;
   bob?: string;

@@ -3,7 +3,7 @@ import { Spec } from '@specron/spec';
 /**
  * Test definition.
  * 
- * ERC20: BNB, OMG, BAT, GNT, ZXC
+ * ERC20: ZXC, BNB, OMG, BAT, GNT
  * ERC721: Cat, Dog, Fox, Bee, Ant, Ape, Pig
  */
 
@@ -23,6 +23,8 @@ interface Data {
   sara?: string;
   signature?: any;
   hash?: string;
+  ZXC?: any;
+  GNT?: any;
 }
 
 /**
@@ -68,6 +70,22 @@ spec.beforeEach(async (ctx) => {
     });
 
   ctx.set('cat', cat);
+});
+
+spec.beforeEach(async (ctx) => {
+  const ZXC = await ctx.deploy({
+    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json'
+  });
+  ctx.set('ZXC', ZXC);
+});
+
+spec.beforeEach(async (ctx) => {
+  const jane = ctx.get('jane');
+  const GNT = await ctx.deploy({
+    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json',
+    from: jane
+  });
+  ctx.set('GNT', GNT);
 });
 
 spec.beforeEach(async (ctx) => {
@@ -132,7 +150,7 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
   await cat.methods.approve(nftProxy._address, 2).send({from: bob});
 
   const transfer1 = {
-    token: ctx.get('cat')._address,
+    token: cat._address,
     kind: 1,
     from: ctx.get('jane'),
     to: ctx.get('bob'),
@@ -140,7 +158,7 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
   };
 
   const transfer2 = {
-    token: ctx.get('cat')._address,
+    token: cat._address,
     kind: 1,
     from: ctx.get('bob'),
     to: ctx.get('jane'),
@@ -191,8 +209,63 @@ erc721s.test('Cat #1, Dog #1 <=> Fox #1, Bee #3', async (ctx) => {
 
 perform.spec('between ERC20s', erc20s);
 
-erc20s.test('10 BAT <=> 30 GNT', async (ctx) => {
-  
+erc20s.test('3000 ZXC <=> 50000 GNT', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const tokenProxy = ctx.get('tokenProxy');
+  const jane = ctx.get('jane');
+  const owner = ctx.get('owner');
+  const ZXC = ctx.get('ZXC');
+  const GNT = ctx.get('GNT');
+  const ZXCAmount = 3000;
+  const GNTAmount = 50000;
+
+  await ZXC.methods.approve(tokenProxy._address, ZXCAmount).send({from: owner});
+  await GNT.methods.approve(tokenProxy._address, GNTAmount).send({from: jane});
+
+  const transfer1 = {
+    token: ZXC._address,
+    kind: 0,
+    from: ctx.get('owner'),
+    to: ctx.get('jane'),
+    value: ZXCAmount,
+  };
+
+  const transfer2 = {
+    token: GNT._address,
+    kind: 0,
+    from: ctx.get('jane'),
+    to: ctx.get('owner'),
+    value: GNTAmount,
+  };
+
+  const swapData = {
+    maker: ctx.get('owner'),
+    taker: ctx.get('jane'),
+    transfers: [transfer1, transfer2],
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, owner);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+
+  const signatureDataTuple = ctx.tuple(signatureData);
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: jane, gas: 4000000});
+  ctx.not(logs.events.PerformSwap, undefined);
+
+  const janeBalance = await ZXC.methods.balanceOf(jane).call();
+  const ownerBalance = await GNT.methods.balanceOf(owner).call();
+
+  ctx.is(janeBalance, ZXCAmount.toString());
+  ctx.is(ownerBalance, GNTAmount.toString());
 });
 
 erc20s.test('20 BAT, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {

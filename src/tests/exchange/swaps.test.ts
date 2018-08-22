@@ -589,16 +589,261 @@ erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
 
 perform.spec('between ERC721s and ERC20s', erc721sErc20s);
 
-erc721sErc20s.test('Cat #1  <=>  5000 ZXC', async (ctx) => {
-  
+erc721sErc20s.test('Cat #1  <=>  5000 OMG', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const tokenProxy = ctx.get('tokenProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+  const omg = ctx.get('omg');
+  const omgAmount = 5000;
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: omg._address,
+      kind: 0,
+      from: bob,
+      to: jane,
+      value: omgAmount,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await omg.methods.approve(tokenProxy._address, omgAmount).send({ from: bob });
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 });
+  ctx.not(logs.events.PerformSwap, undefined);
+
+  const cat1Owner = await cat.methods.ownerOf(1).call();
+  const janeOmgAmount = await omg.methods.balanceOf(jane).call();
+  ctx.is(cat1Owner, bob);
+  ctx.is(janeOmgAmount, omgAmount.toString());
 });
 
-erc721sErc20s.test('Cat #1, Dog #5, 3 ZXC <=> Cat #3, Fox #1, 30 BAT, 5000 BNB', async (ctx) => {
-  
+erc721sErc20s.test('Cat #1, Dog #1, 3 ZXC <=> Cat #3, Fox #1, 30 OMG, 5000 GNT', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const tokenProxy = ctx.get('tokenProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+  const dog = ctx.get('dog');
+  const fox = ctx.get('fox');
+  const omg = ctx.get('omg');
+  const zxc = ctx.get('zxc');
+  const gnt = ctx.get('gnt');
+  const omgAmount = 30;
+  const zxcAmount = 3;
+  const gntAmount = 5000;
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: dog._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: zxc._address,
+      kind: 0,
+      from: jane,
+      to: bob,
+      value: zxcAmount,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 3,
+    },
+    {
+      token: fox._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 1,
+    },
+    {
+      token: omg._address,
+      kind: 0,
+      from: bob,
+      to: jane,
+      value: omgAmount,
+    },
+    {
+      token: gnt._address,
+      kind: 0,
+      from: bob,
+      to: jane,
+      value: gntAmount,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await dog.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await zxc.methods.approve(tokenProxy._address, zxcAmount).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 3).send({ from: bob });
+  await fox.methods.approve(nftProxy._address, 1).send({ from: bob });
+  await omg.methods.approve(tokenProxy._address, omgAmount).send({ from: bob });
+  await gnt.methods.approve(tokenProxy._address, gntAmount).send({ from: bob });
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 });
+  ctx.not(logs.events.PerformSwap, undefined);
+
+  const cat1Owner = await cat.methods.ownerOf(1).call();
+  const cat3Owner = await cat.methods.ownerOf(3).call();
+  const dog1Owner = await dog.methods.ownerOf(1).call();
+  const fox1Owner = await fox.methods.ownerOf(1).call();
+  const janeOmgAmount = await omg.methods.balanceOf(jane).call();
+  const janeGntAmount = await gnt.methods.balanceOf(jane).call();
+  const bobZxcAmount = await zxc.methods.balanceOf(bob).call();+
+  ctx.is(cat1Owner, bob);
+  ctx.is(dog1Owner, bob);
+  ctx.is(cat3Owner, jane);
+  ctx.is(fox1Owner, jane);
+  ctx.is(janeOmgAmount, omgAmount.toString());
+  ctx.is(janeGntAmount, gntAmount.toString());
+  ctx.is(bobZxcAmount, zxcAmount.toString());
 });
 
-erc721sErc20s.test('Cat #1, Dog #5 <=> Cat #3, Fox #1 => 40 ZXC', async (ctx) => {
-  
+erc721sErc20s.test('Cat #1, Dog #1 <=> Cat #3, Fox #1 => 40 ZXC', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const tokenProxy = ctx.get('tokenProxy');
+  const jane = ctx.get('jane');
+  const sara = ctx.get('sara');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+  const dog = ctx.get('dog');
+  const fox = ctx.get('fox');
+  const zxc = ctx.get('zxc');
+  const zxcAmount = 40;
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: dog._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: zxc._address,
+      kind: 0,
+      from: jane,
+      to: sara,
+      value: zxcAmount,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 3,
+    },
+    {
+      token: fox._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 1,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await dog.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await zxc.methods.approve(tokenProxy._address, zxcAmount).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 3).send({ from: bob });
+  await fox.methods.approve(nftProxy._address, 1).send({ from: bob });
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 });
+  ctx.not(logs.events.PerformSwap, undefined);
+
+  const cat1Owner = await cat.methods.ownerOf(1).call();
+  const cat3Owner = await cat.methods.ownerOf(3).call();
+  const dog1Owner = await dog.methods.ownerOf(1).call();
+  const fox1Owner = await fox.methods.ownerOf(1).call();
+  const saraZxcAmount = await zxc.methods.balanceOf(sara).call();
+  ctx.is(cat1Owner, bob);
+  ctx.is(dog1Owner, bob);
+  ctx.is(cat3Owner, jane);
+  ctx.is(fox1Owner, jane);
+  ctx.is(saraZxcAmount, zxcAmount.toString());
 });
 
 /**

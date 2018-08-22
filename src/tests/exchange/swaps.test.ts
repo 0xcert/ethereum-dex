@@ -21,10 +21,13 @@ interface Data {
   bob?: string;
   jane?: string;
   sara?: string;
-  signature?: any;
-  hash?: string;
   zxc?: any;
   gnt?: any;
+}
+
+interface CancelData extends Data {
+  signatureTuple?: any;
+  dataTuple?: any;
 }
 
 /**
@@ -36,7 +39,7 @@ const erc721s = new Spec<Data>();
 const erc20s = new Spec<Data>();
 const erc721sErc20s = new Spec<Data>();
 const perform = new Spec<Data>();
-const cancel = new Spec<Data>();
+const cancel = new Spec<CancelData>();
 const fail = new Spec<Data>();
 
 export default spec;
@@ -278,8 +281,84 @@ erc721sErc20s.test('Cat #1, Dog #5, 3 OMG <=> Cat #3, Fox #1, 30 BAT, 5000 BNB',
 
 spec.spec('cancel an atomic swap', cancel);
 
+cancel.beforeEach(async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+
+  ctx.set('signatureTuple', signatureDataTuple);
+  ctx.set('dataTuple', swapDataTuple);
+});
+
+cancel.test('succesfully', async (ctx) => {
+  const signatureTuple = ctx.get('signatureTuple');
+  const dataTuple = ctx.get('dataTuple');
+  const exchange = ctx.get('exchange');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+
+  const logs = await exchange.methods.cancelSwap(dataTuple).send({ from: jane });
+  ctx.not(logs.events.CancelSwap, undefined);
+  await ctx.reverts(() => exchange.methods.swap(dataTuple, signatureTuple).send({ from: bob, gas: 4000000 }));
+});
+
 cancel.test('throws when trying to cancel an already performed atomic swap', async (ctx) => {
-  
+  const signatureTuple = ctx.get('signatureTuple');
+  const dataTuple = ctx.get('dataTuple');
+  const exchange = ctx.get('exchange');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+
+  await exchange.methods.swap(dataTuple, signatureTuple).send({ from: bob, gas: 4000000 });
+  await ctx.reverts(() => exchange.methods.cancelSwap(dataTuple).send({ from: jane }));
+});
+
+cancel.test('throws when a third party tries to cancel an atomic swap', async (ctx) => {
+  const dataTuple = ctx.get('dataTuple');
+  const exchange = ctx.get('exchange');
+  const sara = ctx.get('sara');
+
+  await ctx.reverts(() => exchange.methods.cancelSwap(dataTuple).send({ from: sara }));
 });
 
 /**
@@ -305,5 +384,9 @@ fail.test('when _to and _from addresses are the same', async (ctx) => {
 });
 
 fail.test('when current time is after expirationTimestamp', async (ctx) => {
+  
+});
+
+fail.test('when using invalid token kind', async (ctx) => {
   
 });

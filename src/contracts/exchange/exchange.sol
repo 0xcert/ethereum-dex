@@ -25,6 +25,7 @@ contract Exchange
   string constant SWAP_ALREADY_PERFORMED = "2006";
   string constant ERC20_TRANSFER_FAILED = "2007";
   string constant ERC721_TRANSFER_FAILED = "2008";
+  string constant MAKER_NOT_EQUAL_TO_SENDER = "2009";
 
 
   /**
@@ -192,6 +193,29 @@ contract Exchange
 
     swapPerformed[claim] = true;
     emit PerformSwap(
+      _data.maker,
+      _data.taker,
+      claim
+    );
+  }
+
+  /** 
+   * @dev Cancels swap
+   *
+   * @param _data Data of swap to cancel.
+   */
+  function cancelSwap(
+    SwapData _data
+  )
+    public
+  {
+    require(_data.maker == msg.sender, MAKER_NOT_EQUAL_TO_SENDER);
+
+    bytes32 claim = getSwapDataClaim(_data);
+    require(!swapPerformed[claim], SWAP_ALREADY_PERFORMED);
+
+    swapCancelled[claim] = true;
+    emit CancelSwap(
       _data.maker,
       _data.taker,
       claim

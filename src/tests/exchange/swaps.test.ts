@@ -1,4 +1,5 @@
 import { Spec } from '@specron/spec';
+import * as common from '../helpers/common';
 
 /**
  * Test definition.
@@ -275,8 +276,8 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -335,8 +336,8 @@ erc721s.test('Cat #1, Cat #4 <=> Cat #2', async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -408,8 +409,8 @@ erc721s.test('Cat #1, Dog #1 <=> Fox #1, Bee #3', async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -476,8 +477,8 @@ erc20s.test('3000 ZXC <=> 50000 GNT', async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -550,8 +551,8 @@ erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -619,8 +620,8 @@ erc721sErc20s.test('Cat #1  <=>  5000 OMG', async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -716,8 +717,8 @@ erc721sErc20s.test('Cat #1, Dog #1, 3 ZXC <=> Cat #3, Fox #1, 30 OMG, 5000 GNT',
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -811,8 +812,8 @@ erc721sErc20s.test('Cat #1, Dog #1 <=> Cat #3, Fox #1 => 40 ZXC', async (ctx) =>
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -879,8 +880,8 @@ cancel.beforeEach(async (ctx) => {
     maker: jane,
     taker: bob,
     transfers,
-    seed: new Date().getTime(), 
-    expiration: new Date().getTime() + 600,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
   };
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
@@ -910,6 +911,7 @@ cancel.test('succeeds', async (ctx) => {
 
   const logs = await exchange.methods.cancelSwap(dataTuple).send({ from: jane });
   ctx.not(logs.events.CancelSwap, undefined);
+  // TODO(Tadej): check revert for code 2005
   await ctx.reverts(() => exchange.methods.swap(dataTuple, signatureTuple).send({ from: bob, gas: 4000000 }));
 });
 
@@ -921,6 +923,7 @@ cancel.test('throws when trying to cancel an already performed atomic swap', asy
   const bob = ctx.get('bob');
 
   await exchange.methods.swap(dataTuple, signatureTuple).send({ from: bob, gas: 4000000 });
+  // TODO(Tadej): check revert for code 2006
   await ctx.reverts(() => exchange.methods.cancelSwap(dataTuple).send({ from: jane }));
 });
 
@@ -929,6 +932,7 @@ cancel.test('throws when a third party tries to cancel an atomic swap', async (c
   const exchange = ctx.get('exchange');
   const sara = ctx.get('sara');
 
+  // TODO(Tadej): check revert for code 2009
   await ctx.reverts(() => exchange.methods.cancelSwap(dataTuple).send({ from: sara }));
 });
 
@@ -939,25 +943,341 @@ cancel.test('throws when a third party tries to cancel an atomic swap', async (c
 spec.spec('fail an atomic swap', fail);
 
 fail.test('when proxy not allowed to transfer nft', async (ctx) => {
-  
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await ctx.reverts(() => exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 }));
 });
 
 fail.test('when proxy has unsofficient allowence for a token', async (ctx) => {
-  
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const tokenProxy = ctx.get('tokenProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+  const omg = ctx.get('omg');
+  const omgAmount = 5000;
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: omg._address,
+      kind: 0,
+      from: bob,
+      to: jane,
+      value: omgAmount,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await omg.methods.approve(tokenProxy._address, omgAmount - 1000).send({ from: bob });
+  await ctx.reverts(() => exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 }));
 });
 
 fail.test('when _to address is not the one performing the transfer', async (ctx) => {
-  
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const sara = ctx.get('sara');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+  // TODO(Tadej): check revert for code 2001
+  await ctx.reverts(() => exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: sara, gas: 4000000 }));
 });
 
-fail.test('when _to and _from addresses are the same', async (ctx) => {
-  
+fail.test('when taker and makes addresses are the same', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: jane,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+  // TODO(Tadej): check revert for code 2002
+  await ctx.reverts(() => exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: jane, gas: 4000000 }));
 });
 
 fail.test('when current time is after expirationTimestamp', async (ctx) => {
-  
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() - 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+  // TODO(Tadej): check revert for code 2003
+  await ctx.reverts(() => exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 }));
 });
 
-fail.test('when using invalid token kind', async (ctx) => {
+fail.test('when signature is invalid', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
+  };
+  let swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+  swapData.transfers[0].kind = 0;
+  swapDataTuple = ctx.tuple(swapData);
   
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+  // TODO(Tadej): check revert for code 2004
+  await ctx.reverts(() =>exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 }));
+});
+
+fail.test('when trying to perform an already perfomed swap', async (ctx) => {
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: common.getCurrentTime(), 
+    expiration: common.getCurrentTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+  
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+  await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 });
+  // TODO(Tadej): check revert for code 2006
+   await ctx.reverts(() => exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 }));
 });

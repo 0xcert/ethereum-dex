@@ -17,6 +17,9 @@ interface Data {
   tokenProxy?: any;
   nftProxy?: any;
   cat?: any;
+  dog?: any;
+  fox?: any;
+  bee?: any;
   owner?: string;
   bob?: string;
   jane?: string;
@@ -52,6 +55,11 @@ spec.beforeEach(async (ctx) => {
   ctx.set('sara', accounts[3]);
 });
 
+/**
+ * Cat
+ * Jane owns: #1, #4
+ * Bob owns: #2, #3
+ */
 spec.beforeEach(async (ctx) => {
   const cat = await ctx.deploy({ 
     src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
@@ -64,12 +72,78 @@ spec.beforeEach(async (ctx) => {
       gas: 4000000,
     });
   await cat.methods
+    .mint(ctx.get('jane'), 4, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
+  await cat.methods
     .mint(ctx.get('bob'), 2, '0xcert.org')
     .send({
       from: ctx.get('owner'),
       gas: 4000000,
     });
+  await cat.methods
+    .mint(ctx.get('bob'), 3, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
   ctx.set('cat', cat);
+});
+
+/**
+ * Dog
+ * Jane owns: #1
+ */
+spec.beforeEach(async (ctx) => {
+  const dog = await ctx.deploy({ 
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+    args: ['dog', 'DOG'],
+  });
+  await dog.methods
+    .mint(ctx.get('jane'), 1, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
+  ctx.set('dog', dog);
+});
+
+/**
+ * Bee
+ * Bob owns: #3
+ */
+spec.beforeEach(async (ctx) => {
+  const bee = await ctx.deploy({ 
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+    args: ['bee', 'BEE'],
+  });
+  await bee.methods
+    .mint(ctx.get('bob'), 3, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
+  ctx.set('bee', bee);
+});
+
+/**
+ * Fox
+ * Bob owns: #1
+ */
+spec.beforeEach(async (ctx) => {
+  const fox = await ctx.deploy({ 
+    src: '@0xcert/ethereum-erc721/build/contracts/NFTokenMetadataEnumerableMock.json',
+    args: ['fox', 'FOX'],
+  });
+  await fox.methods
+    .mint(ctx.get('bob'), 1, '0xcert.org')
+    .send({
+      from: ctx.get('owner'),
+      gas: 4000000,
+    });
+  ctx.set('fox', fox);
 });
 
 spec.beforeEach(async (ctx) => {
@@ -190,11 +264,143 @@ erc721s.test('Cat #1 <=> Cat #2', async (ctx) => {
 });
 
 erc721s.test('Cat #1, Cat #4 <=> Cat #2', async (ctx) => {
-  
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 4,
+    }, 
+    {
+      token: cat._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 2,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 4).send({ from: jane });
+  await cat.methods.approve(nftProxy._address, 2).send({ from: bob });
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 4000000 });
+  ctx.not(logs.events.PerformSwap, undefined);
+
+  const cat1Owner = await cat.methods.ownerOf(1).call();
+  const cat2Owner = await cat.methods.ownerOf(2).call();
+  const cat4Owner = await cat.methods.ownerOf(4).call();
+  ctx.is(cat1Owner, bob);
+  ctx.is(cat2Owner, jane);
+  ctx.is(cat4Owner, bob);
 });
 
 erc721s.test('Cat #1, Dog #1 <=> Fox #1, Bee #3', async (ctx) => {
-  
+  const exchange = ctx.get('exchange');
+  const nftProxy = ctx.get('nftProxy');
+  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
+  const cat = ctx.get('cat');
+  const dog = ctx.get('dog');
+  const fox = ctx.get('fox');
+  const bee = ctx.get('bee');
+
+  const transfers = [
+    {
+      token: cat._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: dog._address,
+      kind: 1,
+      from: jane,
+      to: bob,
+      value: 1,
+    },
+    {
+      token: fox._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 1,
+    },
+    {
+      token: bee._address,
+      kind: 1,
+      from: bob,
+      to: jane,
+      value: 3,
+    },
+  ];
+  const swapData = {
+    maker: jane,
+    taker: bob,
+    transfers,
+    seed: new Date().getTime(), 
+    expiration: new Date().getTime() + 600,
+  };
+  const swapDataTuple = ctx.tuple(swapData);
+  const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
+
+  const signature = await ctx.web3.eth.sign(claim, jane);
+  const signatureData = {
+    r: signature.substr(0, 66),
+    s: `0x${signature.substr(66, 64)}`,
+    v: parseInt(`0x${signature.substr(130, 2)}`) + 27,
+    kind: 0,
+  };
+  const signatureDataTuple = ctx.tuple(signatureData);
+
+  await cat.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await dog.methods.approve(nftProxy._address, 1).send({ from: jane });
+  await fox.methods.approve(nftProxy._address, 1).send({ from: bob });
+  await bee.methods.approve(nftProxy._address, 3).send({ from: bob });
+
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({ from: bob, gas: 6000000 });
+  ctx.not(logs.events.PerformSwap, undefined);
+
+  const cat1Owner = await cat.methods.ownerOf(1).call();
+  const dog1Owner = await dog.methods.ownerOf(1).call();
+  const fox1Owner = await fox.methods.ownerOf(1).call();
+  const bee3Owner = await bee.methods.ownerOf(3).call();
+  ctx.is(cat1Owner, bob);
+  ctx.is(dog1Owner, bob);
+  ctx.is(fox1Owner, jane);
+  ctx.is(bee3Owner, jane);
 });
 
 /**
@@ -271,6 +477,10 @@ erc20s.test('20 BAT, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
 perform.spec('between ERC721s and ERC20s', erc721sErc20s);
 
 erc721sErc20s.test('Cat #1, Dog #5, 3 OMG <=> Cat #3, Fox #1, 30 BAT, 5000 BNB', async (ctx) => {
+  
+});
+
+erc721sErc20s.test('Cat #1  <=>  5000 BNB', async (ctx) => {
   
 });
 

@@ -150,59 +150,54 @@ spec.beforeEach(async (ctx) => {
 
 /**
  * ZXC
- * Owner owns: all
+ * Jane owns: all
  */
 spec.beforeEach(async (ctx) => {
+  const jane = ctx.get('jane');
   const zxc = await ctx.deploy({
-    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json'
+    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json',
+    from: jane
   });
   ctx.set('zxc', zxc);
 });
 
 /**
  * BNB
- * Owner owns: all
+ * Jane owns: all
  */
 spec.beforeEach(async (ctx) => {
+  const jane = ctx.get('jane');
   const bnb = await ctx.deploy({
-    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json'
+    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json',
+    from: jane
   });
   ctx.set('bnb', bnb);
 });
 
 /**
  * GNT
- * Jane owns: all
+ * Bob owns: all
  */
 spec.beforeEach(async (ctx) => {
-  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
   const gnt = await ctx.deploy({
     src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json',
-    from: jane
+    from: bob
   });
   ctx.set('gnt', gnt);
 });
 
 /**
  * OMG
- * Jane owns: all
+ * Bob owns: all
  */
 spec.beforeEach(async (ctx) => {
-  const jane = ctx.get('jane');
+  const bob = ctx.get('bob');
   const omg = await ctx.deploy({
     src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json',
-    from: jane
+    from: bob
   });
   ctx.set('omg', omg);
-});
-
-spec.beforeEach(async (ctx) => {
-  const jane = ctx.get('jane');
-  const gnt = await ctx.deploy({
-    src: '@0xcert/ethereum-erc20/build/contracts/TokenMock.json',
-    from: jane
-  });
-  ctx.set('gnt', gnt);
 });
 
 spec.beforeEach(async (ctx) => {
@@ -455,7 +450,7 @@ erc20s.test('3000 ZXC <=> 50000 GNT', async (ctx) => {
   const exchange = ctx.get('exchange');
   const tokenProxy = ctx.get('tokenProxy');
   const jane = ctx.get('jane');
-  const owner = ctx.get('owner');
+  const bob = ctx.get('bob');
   const zxc = ctx.get('zxc');
   const gnt = ctx.get('gnt');
   const zxcAmount = 3000;
@@ -465,21 +460,21 @@ erc20s.test('3000 ZXC <=> 50000 GNT', async (ctx) => {
     {
       token: zxc._address,
       kind: 0,
-      from: owner,
-      to: jane,
+      from: jane,
+      to: bob,
       value: zxcAmount,
     },
     {
       token: gnt._address,
       kind: 0,
-      from: jane,
-      to: owner,
+      from: bob,
+      to: jane,
       value: gntAmount,
     },
   ];
   const swapData = {
-    maker: owner,
-    taker: jane,
+    maker: jane,
+    taker: bob,
     transfers,
     seed: new Date().getTime(), 
     expiration: new Date().getTime() + 600,
@@ -487,7 +482,7 @@ erc20s.test('3000 ZXC <=> 50000 GNT', async (ctx) => {
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
 
-  const signature = await ctx.web3.eth.sign(claim, owner);
+  const signature = await ctx.web3.eth.sign(claim, jane);
   const signatureData = {
     r: signature.substr(0, 66),
     s: `0x${signature.substr(66, 64)}`,
@@ -496,22 +491,22 @@ erc20s.test('3000 ZXC <=> 50000 GNT', async (ctx) => {
   };
   const signatureDataTuple = ctx.tuple(signatureData);
 
-  await zxc.methods.approve(tokenProxy._address, zxcAmount).send({ from: owner });
-  await gnt.methods.approve(tokenProxy._address, gntAmount).send({ from: jane });
-  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: jane, gas: 4000000});
+  await zxc.methods.approve(tokenProxy._address, zxcAmount).send({ from: jane });
+  await gnt.methods.approve(tokenProxy._address, gntAmount).send({ from: bob });
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: bob, gas: 4000000});
   ctx.not(logs.events.PerformSwap, undefined);
 
-  const janeBalance = await zxc.methods.balanceOf(jane).call();
-  const ownerBalance = await gnt.methods.balanceOf(owner).call();
-  ctx.is(janeBalance, zxcAmount.toString());
-  ctx.is(ownerBalance, gntAmount.toString());
+  const bobBalance = await zxc.methods.balanceOf(bob).call();
+  const janeBalance = await gnt.methods.balanceOf(jane).call();
+  ctx.is(bobBalance, zxcAmount.toString());
+  ctx.is(janeBalance, gntAmount.toString());
 });
 
 erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
   const exchange = ctx.get('exchange');
   const tokenProxy = ctx.get('tokenProxy');
   const jane = ctx.get('jane');
-  const owner = ctx.get('owner');
+  const bob = ctx.get('bob');
   const zxc = ctx.get('zxc');
   const gnt = ctx.get('gnt');
   const bnb = ctx.get('bnb');
@@ -525,35 +520,35 @@ erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
     {
       token: zxc._address,
       kind: 0,
-      from: owner,
-      to: jane,
+      from: jane,
+      to: bob,
       value: zxcAmount,
     },
     {
       token: bnb._address,
       kind: 0,
-      from: owner,
-      to: jane,
+      from: jane,
+      to: bob,
       value: bnbAmount,
     },
     {
       token: gnt._address,
       kind: 0,
-      from: jane,
-      to: owner,
+      from: bob,
+      to: jane,
       value: gntAmount,
     },
     {
       token: omg._address,
       kind: 0,
-      from: jane,
-      to: owner,
+      from: bob,
+      to: jane,
       value: omgAmount,
     },
   ];
   const swapData = {
-    maker: owner,
-    taker: jane,
+    maker: jane,
+    taker: bob,
     transfers,
     seed: new Date().getTime(), 
     expiration: new Date().getTime() + 600,
@@ -561,7 +556,7 @@ erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
   const swapDataTuple = ctx.tuple(swapData);
   const claim = await exchange.methods.getSwapDataClaim(swapDataTuple).call();
 
-  const signature = await ctx.web3.eth.sign(claim, owner);
+  const signature = await ctx.web3.eth.sign(claim, jane);
   const signatureData = {
     r: signature.substr(0, 66),
     s: `0x${signature.substr(66, 64)}`,
@@ -570,21 +565,21 @@ erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
   };
   const signatureDataTuple = ctx.tuple(signatureData);
 
-  await zxc.methods.approve(tokenProxy._address, zxcAmount).send({ from: owner });
-  await bnb.methods.approve(tokenProxy._address, bnbAmount).send({ from: owner });
-  await gnt.methods.approve(tokenProxy._address, gntAmount).send({ from: jane });
-  await omg.methods.approve(tokenProxy._address, omgAmount).send({ from: jane });
-  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: jane, gas: 4000000});
+  await zxc.methods.approve(tokenProxy._address, zxcAmount).send({ from: jane });
+  await bnb.methods.approve(tokenProxy._address, bnbAmount).send({ from: jane });
+  await gnt.methods.approve(tokenProxy._address, gntAmount).send({ from: bob });
+  await omg.methods.approve(tokenProxy._address, omgAmount).send({ from: bob });
+  const logs = await exchange.methods.swap(swapDataTuple, signatureDataTuple).send({from: bob, gas: 4000000});
   ctx.not(logs.events.PerformSwap, undefined);
 
-  const janeZxcBalance = await zxc.methods.balanceOf(jane).call();
-  const janeBnbBalance = await bnb.methods.balanceOf(jane).call();
-  const ownerGntBalance = await gnt.methods.balanceOf(owner).call();
-  const ownerOmgBalance = await omg.methods.balanceOf(owner).call();
-  ctx.is(janeZxcBalance, zxcAmount.toString());
-  ctx.is(janeBnbBalance, bnbAmount.toString());
-  ctx.is(ownerGntBalance, gntAmount.toString());
-  ctx.is(ownerOmgBalance, omgAmount.toString());
+  const bobZxcBalance = await zxc.methods.balanceOf(bob).call();
+  const bobBnbBalance = await bnb.methods.balanceOf(bob).call();
+  const janeGntBalance = await gnt.methods.balanceOf(jane).call();
+  const janeOmgBalance = await omg.methods.balanceOf(jane).call();
+  ctx.is(bobZxcBalance, zxcAmount.toString());
+  ctx.is(bobBnbBalance, bnbAmount.toString());
+  ctx.is(janeGntBalance, gntAmount.toString());
+  ctx.is(janeOmgBalance, omgAmount.toString());
 });
 
 /**
@@ -594,11 +589,15 @@ erc20s.test('500 ZXC, 1 BNB <=> 30 GNT, 5 OMG', async (ctx) => {
 
 perform.spec('between ERC721s and ERC20s', erc721sErc20s);
 
-erc721sErc20s.test('Cat #1  <=>  5000 BNB', async (ctx) => {
+erc721sErc20s.test('Cat #1  <=>  5000 ZXC', async (ctx) => {
   
 });
 
-erc721sErc20s.test('Cat #1, Dog #5, 3 OMG <=> Cat #3, Fox #1, 30 BAT, 5000 BNB', async (ctx) => {
+erc721sErc20s.test('Cat #1, Dog #5, 3 ZXC <=> Cat #3, Fox #1, 30 BAT, 5000 BNB', async (ctx) => {
+  
+});
+
+erc721sErc20s.test('Cat #1, Dog #5 <=> Cat #3, Fox #1 => 40 ZXC', async (ctx) => {
   
 });
 

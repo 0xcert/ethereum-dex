@@ -51,10 +51,9 @@
     "@0xcert/ethereum-erc721": "^1.10.0",
     "@specron/cli": "^0.0.38",
     "@specron/spec": "^0.0.38",
-    "lerna": "^3.1.1",
     "ts-node": "^7.0.1",
     "typescript": "^3.0.1",
-    "web3": "git+https://github.com/0xcert/web3.js.git#newAbiLib",
-    "web3-utils": "^1.0.0-beta.34"
+    "web3": "^1.0.0-beta.35",
+    "web3-utils": "^1.0.0-beta.35"
   }
 }

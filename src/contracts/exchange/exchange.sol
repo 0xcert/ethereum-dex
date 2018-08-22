@@ -1,6 +1,9 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
+import "../proxy/token-transfer-proxy.sol";
+import "../proxy/nftokens-transfer-proxy.sol";
+
 /**
  * @dev Decentralize exchange for fundgible and non-fundgible tokens powered by atomic swaps. 
  */
@@ -9,7 +12,21 @@ contract Exchange
   /**
    * @dev Error constants.
    */
-  string constant INVALID_SIGNATURE_KIND = "1001";
+  string constant INVALID_TOKEN_TRANSFER_PROXY = "1001";
+  string constant INVALID_NF_TOKEN_TRANSFER_PROXY = "1002";
+  string constant INVALID_SIGNATURE_KIND = "1003";
+  string constant INVALID_TOKEN_KIND = "1004";
+
+  string constant TAKER_NOT_EQUAL_TO_SENDER = "2001";
+  string constant TAKER_EQUAL_TO_MAKER = "2002";
+  string constant CLAIM_EXPIRED = "2003";
+  string constant INVALID_SIGNATURE = "2004";
+  string constant SWAP_CANCELED = "2005";
+  string constant SWAP_ALREADY_PERFORMED = "2006";
+  string constant ERC20_TRANSFER_FAILED = "2007";
+  string constant ERC721_TRANSFER_FAILED = "2008";
+  string constant MAKER_NOT_EQUAL_TO_SENDER = "2009";
+
 
   /**
    * @dev Enum of available signature kinds.
@@ -24,7 +41,8 @@ contract Exchange
    * https://github.com/trezor/trezor-mcu/blob/master/firmware/crypto.c#L36 
    * @param eip721 Signature using eip721.
    */
-  enum SignatureKind{
+  enum SignatureKind
+  {
     eth_sign,
     trezor,
     eip712
@@ -35,7 +53,8 @@ contract Exchange
    * @param erc20 ERC20 standard tokens.
    * @param erc721 ERC721 standard tokens.
    */
-  enum TokenKind{
+  enum TokenKind
+  {
     erc20,
     erc721
   }
@@ -90,10 +109,117 @@ contract Exchange
     uint256 expiration;
   }
 
-  constructor () 
+  /** 
+   * @dev Proxy contract addresses.
+   */
+  address public tokenTransferProxy; 
+  address public nfTokenTransferProxy; 
+
+  /**
+   * @dev Mapping of all cancelled transfers.
+   */
+  mapping(bytes32 => bool) public swapCancelled;
+
+  /**
+   * @dev Mapping of all performed transfers.
+   */
+  mapping(bytes32 => bool) public swapPerformed;
+
+  /**
+   * @dev This event emmits when tokens change ownership.
+   */
+  event PerformSwap(
+    address indexed _maker,
+    address indexed _taker,
+    bytes32 _claim
+  );
+
+  /**
+   * @dev This event emmits when transfer order is cancelled.
+   */
+  event CancelSwap(
+    address indexed _maker,
+    address indexed _taker,
+    bytes32 _claim
+  );
+
+  /**
+   * @dev Sets Token proxy address and NFT Proxy address.
+   * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
+   * @param _nfTokenTransferProxy Address pointing to NFTokenTransferProxy contract.
+   */
+  constructor (
+    address _tokenTransferProxy, 
+    address _nfTokenTransferProxy
+  ) 
     public
   {
+    require(_tokenTransferProxy != address(0), INVALID_TOKEN_TRANSFER_PROXY);
+    require(_nfTokenTransferProxy != address(0), INVALID_NF_TOKEN_TRANSFER_PROXY);
 
+    tokenTransferProxy = _tokenTransferProxy;
+    nfTokenTransferProxy = _nfTokenTransferProxy;
+  }
+
+  /**
+   * @dev Performs the ERC721/ERC20 atomic swap.
+   * @param _data Data required to make the swap.
+   * @param _signature Data from the signature. 
+   */
+  function swap(
+    SwapData _data,
+    SignatureData _signature
+  )
+    public 
+  {
+    require(_data.taker == msg.sender, TAKER_NOT_EQUAL_TO_SENDER);
+    require(_data.taker != _data.maker, TAKER_EQUAL_TO_MAKER);
+    require(_data.expiration >= now, CLAIM_EXPIRED);
+
+    bytes32 claim = getSwapDataClaim(_data);
+    require(
+      isValidSignature(
+        _data.maker,
+        claim,
+        _signature
+      ), 
+      INVALID_SIGNATURE
+    );
+
+    require(!swapCancelled[claim], SWAP_CANCELED);
+    require(!swapPerformed[claim], SWAP_ALREADY_PERFORMED);
+
+    _makeTransfers(_data.transfers);
+
+    swapPerformed[claim] = true;
+    emit PerformSwap(
+      _data.maker,
+      _data.taker,
+      claim
+    );
+  }
+
+  /** 
+   * @dev Cancels swap
+   *
+   * @param _data Data of swap to cancel.
+   */
+  function cancelSwap(
+    SwapData _data
+  )
+    public
+  {
+    require(_data.maker == msg.sender, MAKER_NOT_EQUAL_TO_SENDER);
+
+    bytes32 claim = getSwapDataClaim(_data);
+    require(!swapPerformed[claim], SWAP_ALREADY_PERFORMED);
+
+    swapCancelled[claim] = true;
+    emit CancelSwap(
+      _data.maker,
+      _data.taker,
+      claim
+    );
   }
 
   /**
@@ -186,5 +312,85 @@ contract Exchange
     }
 
     revert(INVALID_SIGNATURE_KIND);
+  }
+
+  /**
+   * @dev Helper function that makes transfes.
+   * @param _transfers Data needed for transfers.
+   */
+  function _makeTransfers(
+    TransferData[] _transfers
+  )
+    private
+  {
+    for(uint256 i = 0; i < _transfers.length; i++)
+    {
+      if(_transfers[i].kind == TokenKind.erc20)
+      {
+        require(
+          _transferViaTokenTransferProxy(
+            _transfers[i].token,
+            _transfers[i].from,
+            _transfers[i].to,
+            _transfers[i].value
+          ),
+          ERC20_TRANSFER_FAILED
+        );
+      }else if(_transfers[i].kind == TokenKind.erc721)
+      {
+        _transferViaNFTokenTransferProxy(
+          _transfers[i].token,
+          _transfers[i].from,
+          _transfers[i].to,
+          _transfers[i].value
+        );
+      }else 
+      {
+        revert(INVALID_TOKEN_KIND);
+      }
+    }
+  }
+
+  /** 
+   * @dev Transfers ERC20 tokens via TokenTransferProxy using transferFrom function.
+   * @param _token Address of token to transferFrom.
+   * @param _from Address transfering token.
+   * @param _to Address receiving token.
+   * @param _value Amount of token to transfer.
+   */
+  function _transferViaTokenTransferProxy(
+    address _token,
+    address _from,
+    address _to,
+    uint _value
+  )
+    internal
+    returns (bool)
+  {
+    return TokenTransferProxy(tokenTransferProxy).transferFrom(
+      _token,
+      _from,
+      _to,
+      _value
+    );
+  }
+
+  /**
+   * @dev Transfers NFToken via NFTokenProxy using transferFrom function.
+   * @param _nfToken Address of NFToken to transfer.
+   * @param _from Address sending NFToken.
+   * @param _to Address receiving NFToken.
+   * @param _id Id of transfering NFToken.
+   */
+  function _transferViaNFTokenTransferProxy(
+    address _nfToken,
+    address _from,
+    address _to,
+    uint256 _id
+  )
+    internal
+  {
+    NFTokenTransferProxy(nfTokenTransferProxy)
+      .transferFrom(_nfToken, _from, _to, _id);
   }
 }

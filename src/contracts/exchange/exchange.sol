@@ -364,7 +364,7 @@ contract Exchange
     address _to,
     uint _value
   )
-    internal
+    private
     returns (bool)
   {
     return TokenTransferProxy(tokenTransferProxy).transferFrom(
@@ -388,7 +388,7 @@ contract Exchange
     address _to,
     uint256 _id
   )
-    internal
+    private
   {
     NFTokenTransferProxy(nfTokenTransferProxy).transferFrom(
       _nfToken,

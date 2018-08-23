@@ -27,7 +27,6 @@ contract Exchange
   string constant ERC721_TRANSFER_FAILED = "2008";
   string constant MAKER_NOT_EQUAL_TO_SENDER = "2009";
 
-
   /**
    * @dev Enum of available signature kinds.
    * @param eth_sign Signature using eth sign.
@@ -390,7 +389,11 @@ contract Exchange
   )
     internal
   {
-    NFTokenTransferProxy(nfTokenTransferProxy)
-      .transferFrom(_nfToken, _from, _to, _id);
+    NFTokenTransferProxy(nfTokenTransferProxy).transferFrom(
+      _nfToken,
+      _from,
+      _to,
+      _id
+    );
   }
 }

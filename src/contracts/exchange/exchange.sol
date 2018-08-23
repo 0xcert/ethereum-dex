@@ -27,7 +27,6 @@ contract Exchange
   string constant ERC721_TRANSFER_FAILED = "2008";
   string constant MAKER_NOT_EQUAL_TO_SENDER = "2009";
 
-
   /**
    * @dev Enum of available signature kinds.
    * @param eth_sign Signature using eth sign.
@@ -148,7 +147,7 @@ contract Exchange
    * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
    * @param _nfTokenTransferProxy Address pointing to NFTokenTransferProxy contract.
    */
-  constructor (
+  constructor(
     address _tokenTransferProxy, 
     address _nfTokenTransferProxy
   ) 
@@ -189,9 +188,10 @@ contract Exchange
     require(!swapCancelled[claim], SWAP_CANCELED);
     require(!swapPerformed[claim], SWAP_ALREADY_PERFORMED);
 
+    swapPerformed[claim] = true;
+
     _makeTransfers(_data.transfers);
 
-    swapPerformed[claim] = true;
     emit PerformSwap(
       _data.maker,
       _data.taker,
@@ -364,7 +364,7 @@ contract Exchange
     address _to,
     uint _value
   )
-    internal
+    private
     returns (bool)
   {
     return TokenTransferProxy(tokenTransferProxy).transferFrom(
@@ -388,9 +388,13 @@ contract Exchange
     address _to,
     uint256 _id
   )
-    internal
+    private
   {
-    NFTokenTransferProxy(nfTokenTransferProxy)
-      .transferFrom(_nfToken, _from, _to, _id);
+    NFTokenTransferProxy(nfTokenTransferProxy).transferFrom(
+      _nfToken,
+      _from,
+      _to,
+      _id
+    );
   }
 }

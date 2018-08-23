@@ -147,7 +147,7 @@ contract Exchange
    * @param _tokenTransferProxy Address pointing to TokenTransferProxy contract.
    * @param _nfTokenTransferProxy Address pointing to NFTokenTransferProxy contract.
    */
-  constructor (
+  constructor(
     address _tokenTransferProxy, 
     address _nfTokenTransferProxy
   ) 
@@ -188,9 +188,10 @@ contract Exchange
     require(!swapCancelled[claim], SWAP_CANCELED);
     require(!swapPerformed[claim], SWAP_ALREADY_PERFORMED);
 
+    swapPerformed[claim] = true;
+
     _makeTransfers(_data.transfers);
 
-    swapPerformed[claim] = true;
     emit PerformSwap(
       _data.maker,
       _data.taker,
